@@ -3,180 +3,20 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#4f46e5" />
     <title>Zarban — Adaptive Math Assessment</title>
-    <meta
-      name="description"
-      content="A smart NCERT-aligned math diagnostic for students in Grades 5–10."
-    />
+    <meta name="description" content="A private, adaptive NCERT-aligned math diagnostic for students in Classes 5–10." />
     <meta property="og:title" content="Zarban — Adaptive Math Assessment" />
-    <meta
-      property="og:description"
-      content="Find your strengths, gaps, and the right topic to study next."
-    />
-    <meta
-      property="og:image"
-      content="https://zarban-adaptive-math.ramthinkplus.chatgpt.site/og.png"
-    />
-    <style>
-      :root {
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI",
-          sans-serif;
-        color: #0f172a;
-        background: #f6f7fb;
-      }
-      * { box-sizing: border-box; }
-      body {
-        margin: 0;
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
-        overflow-x: hidden;
-        background:
-          radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.22), transparent 30%),
-          radial-gradient(circle at 88% 70%, rgba(139, 92, 246, 0.2), transparent 34%),
-          #f6f7fb;
-      }
-      body::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        pointer-events: none;
-        opacity: 0.35;
-        background-image: radial-gradient(#94a3b8 1px, transparent 1px);
-        background-size: 24px 24px;
-      }
-      main {
-        position: relative;
-        width: min(1080px, calc(100% - 32px));
-        margin: 40px auto;
-        padding: clamp(32px, 6vw, 72px);
-        border: 1px solid rgba(255, 255, 255, 0.8);
-        border-radius: 32px;
-        background: rgba(255, 255, 255, 0.82);
-        box-shadow: 0 28px 90px rgba(79, 70, 229, 0.16);
-        backdrop-filter: blur(18px);
-      }
-      .badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 14px;
-        border: 1px solid #c7d2fe;
-        border-radius: 999px;
-        background: #eef2ff;
-        color: #4338ca;
-        font-size: 14px;
-        font-weight: 700;
-      }
-      h1 {
-        max-width: 780px;
-        margin: 26px 0 18px;
-        font-size: clamp(42px, 7vw, 76px);
-        line-height: 1.02;
-        letter-spacing: -0.055em;
-      }
-      h1 span { color: #5b21b6; }
-      .lede {
-        max-width: 720px;
-        margin: 0;
-        color: #475569;
-        font-size: clamp(18px, 2.5vw, 24px);
-        line-height: 1.55;
-      }
-      .actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 14px;
-        margin-top: 34px;
-      }
-      a {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 52px;
-        padding: 0 22px;
-        border-radius: 14px;
-        font-weight: 800;
-        text-decoration: none;
-      }
-      .primary {
-        background: linear-gradient(135deg, #4f46e5, #7c3aed);
-        color: #fff;
-        box-shadow: 0 12px 28px rgba(79, 70, 229, 0.28);
-      }
-      .secondary {
-        border: 1px solid #cbd5e1;
-        background: #fff;
-        color: #334155;
-      }
-      .features {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 16px;
-        margin-top: 48px;
-      }
-      .feature {
-        padding: 22px;
-        border: 1px solid #e2e8f0;
-        border-radius: 20px;
-        background: rgba(248, 250, 252, 0.9);
-      }
-      .feature strong {
-        display: block;
-        margin-bottom: 8px;
-        font-size: 17px;
-      }
-      .feature p {
-        margin: 0;
-        color: #64748b;
-        line-height: 1.5;
-      }
-      footer {
-        margin-top: 34px;
-        color: #94a3b8;
-        font-size: 13px;
-      }
-      @media (max-width: 760px) {
-        main { padding: 30px 24px; border-radius: 24px; }
-        .features { grid-template-columns: 1fr; }
-        h1 { letter-spacing: -0.04em; }
-      }
-    </style>
+    <meta property="og:description" content="Find your strengths, gaps, and the right topic to study next." />
+    <meta property="og:image" content="https://karthiklagudu.github.io/Zarban/og.png" />
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <main>
-      <div class="badge">✦ Grades 5–10 · NCERT aligned</div>
-      <h1>Find out exactly where your <span>math stands.</span></h1>
-      <p class="lede">
-        Zarban is an adaptive diagnostic that identifies strengths,
-        misconceptions, and foundational gaps—then shows what to study next.
-      </p>
-      <div class="actions">
-        <a
-          class="primary"
-          href="https://zarban-adaptive-math.ramthinkplus.chatgpt.site/"
-        >Open Zarban assessment →</a>
-        <a class="secondary" href="https://github.com/karthikLagudu/Zarban"
-        >View source on GitHub</a>
-      </div>
-      <section class="features" aria-label="Product highlights">
-        <article class="feature">
-          <strong>Adapts as you answer</strong>
-          <p>Question difficulty changes with each response for a focused diagnostic.</p>
-        </article>
-        <article class="feature">
-          <strong>Explains the why</strong>
-          <p>Wrong answers map to specific misconceptions and prerequisite gaps.</p>
-        </article>
-        <article class="feature">
-          <strong>Actionable reports</strong>
-          <p>See skill mastery, learning dimensions, and clear next steps.</p>
-        </article>
-      </section>
-      <footer>
-        The full application runs on managed hosting because its assessment
-        engine requires server APIs and persistent storage.
-      </footer>
-    </main>
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+    <div id="app" aria-live="polite"></div>
+    <noscript>Zarban needs JavaScript enabled to run the assessment.</noscript>
+    <script src="data.js"></script>
+    <script src="app.js"></script>
   </body>
 </html>
