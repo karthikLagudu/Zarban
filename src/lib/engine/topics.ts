@@ -1,6 +1,6 @@
 // Topic (skill) sequencing helpers over the knowledge graph.
 
-import type { Skill } from "@prisma/client";
+import type { Skill } from "@/generated/prisma/client";
 
 async function getPrisma() {
   return (await import("@/lib/db")).prisma;

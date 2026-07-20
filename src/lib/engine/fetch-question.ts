@@ -9,7 +9,7 @@
 // seen in *previous* sessions are soft-avoided so retakes stay fresh.
 
 import { prisma } from "@/lib/db";
-import type { Question } from "@prisma/client";
+import type { Question } from "@/generated/prisma/client";
 import { nearestBands } from "./difficulty";
 import { clampGrade, GRADE_CEILING, GRADE_FLOOR } from "./types";
 

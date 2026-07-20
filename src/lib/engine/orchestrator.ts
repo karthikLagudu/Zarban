@@ -7,7 +7,7 @@
 // (twin probe → CDM remediation → CAT progression) decides the next question.
 
 import { prisma } from "@/lib/db";
-import type { AssessmentSession, Question } from "@prisma/client";
+import type { AssessmentSession, Question } from "@/generated/prisma/client";
 import { bktUpdate, clamp01 } from "./bkt";
 import { escalateDifficulty, reduceDifficulty } from "./difficulty";
 import { fetchQuestion } from "./fetch-question";
