@@ -8,6 +8,7 @@
     "build": "vinext build",
     "start": "vinext start",
     "build:next": "next build",
+    "build:pages": "tsx scripts/export-pages-data.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
