@@ -1,0 +1,292 @@
+// Adaptive Math Assessment Tool — relational schema (spec Part 4).
+// Provider is SQLite for zero-setup local runs. To use PostgreSQL, change
+// provider to "postgresql" and point DATABASE_URL at your server — the model
+// definitions are compatible with both.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ── Sheet 1: skills ─────────────────────────────────────────────────────────
+model Skill {
+  skillId              String  @id @map("skill_id")
+  skillName            String  @map("skill_name")
+  gradeLevel           String? @map("grade_level")
+  topicArea            String? @map("topic_area")
+  difficultyBand       String? @map("difficulty_band")
+  prerequisiteSkillIds String? @map("prerequisite_skill_ids") // raw comma-separated, kept for re-export
+  notes                String?
+
+  prerequisites KnowledgeGraphEdge[] @relation("childEdges")
+  dependents    KnowledgeGraphEdge[] @relation("parentEdges")
+  questions     Question[]           @relation("primarySkill")
+  qMatrixRows   QMatrixEntry[]
+  bktStates     BktState[]
+
+  @@map("skills")
+}
+
+// Knowledge Graph, parsed from prerequisite_skill_ids on import.
+model KnowledgeGraphEdge {
+  childSkillId  String @map("child_skill_id")
+  parentSkillId String @map("parent_skill_id")
+
+  child  Skill @relation("childEdges", fields: [childSkillId], references: [skillId], onDelete: Cascade)
+  parent Skill @relation("parentEdges", fields: [parentSkillId], references: [skillId], onDelete: Cascade)
+
+  @@id([childSkillId, parentSkillId])
+  @@index([parentSkillId])
+  @@map("knowledge_graph")
+}
+
+// ── Sheet 2: questions ──────────────────────────────────────────────────────
+model Question {
+  questionId       String  @id @map("question_id")
+  questionText     String  @map("question_text")
+  questionType     String? @map("question_type") // MCQ | WordProblem | ShortAnswer
+  wordProblemFlag  Boolean @default(false) @map("word_problem_flag")
+  equationTwinId   String? @map("equation_twin_id")
+  primarySkillId   String? @map("primary_skill_id")
+  secondarySkillIds String? @map("secondary_skill_ids")
+  gradeLevel       Int?    @map("grade_level")
+  difficultyBand   String? @map("difficulty_band")
+  optionA          String? @map("option_a")
+  optionB          String? @map("option_b")
+  optionC          String? @map("option_c")
+  optionD          String? @map("option_d")
+  correctOption    String? @map("correct_option")
+  // IRT 3PL item parameters (a: discrimination, b: difficulty, c: guessing)
+  irtA             Float   @default(1.0) @map("irt_a")
+  irtB             Float   @default(0.0) @map("irt_b")
+  irtC             Float   @default(0.25) @map("irt_c")
+
+  equationTwin Question?  @relation("twin", fields: [equationTwinId], references: [questionId], onDelete: NoAction, onUpdate: NoAction)
+  wordVersions Question[] @relation("twin")
+  primarySkill Skill?     @relation("primarySkill", fields: [primarySkillId], references: [skillId])
+
+  qMatrixRows QMatrixEntry[]
+  answerTraps AnswerTrap[]
+  dimensions  QuestionDimension?
+  responses   Response[]
+
+  @@index([primarySkillId, gradeLevel, difficultyBand])
+  @@index([gradeLevel, difficultyBand])
+  @@map("questions")
+}
+
+// ── Sheet 3: q_matrix ───────────────────────────────────────────────────────
+model QMatrixEntry {
+  questionId String @map("question_id")
+  skillId    String @map("skill_id")
+
+  question Question @relation(fields: [questionId], references: [questionId], onDelete: Cascade)
+  skill    Skill    @relation(fields: [skillId], references: [skillId], onDelete: Cascade)
+
+  @@id([questionId, skillId])
+  @@index([skillId])
+  @@map("q_matrix")
+}
+
+// ── Sheet 4: answer_traps ───────────────────────────────────────────────────
+model AnswerTrap {
+  id                  Int     @id @default(autoincrement())
+  questionId          String  @map("question_id")
+  optionLabel         String  @map("option_label") // A | B | C | D
+  optionText          String? @map("option_text")
+  trapType            String? @map("trap_type") // Calculation_Error | Concept_Error | Sign_Error | Reading_Error | Procedural_Error | Careless_Slip
+  skillGapId          String? @map("skill_gap_id")
+  misconception       String?
+  misconceptionDetail String? @map("misconception_detail")
+  remedialAction      String? @map("remedial_action") // serve_same_level | go_down_grade | go_prereq_skill | flag_review
+  remedialSkillId     String? @map("remedial_skill_id")
+  remedialGrade       Int?    @map("remedial_grade")
+
+  question Question @relation(fields: [questionId], references: [questionId], onDelete: Cascade)
+
+  @@unique([questionId, optionLabel])
+  @@map("answer_traps")
+}
+
+// ── Sheet 5: question_dimensions ────────────────────────────────────────────
+model QuestionDimension {
+  questionId       String  @id @map("question_id")
+  dimReading       Boolean @default(false) @map("dim_reading")
+  dimUnderstanding Boolean @default(false) @map("dim_understanding")
+  dimApplication   Boolean @default(false) @map("dim_application")
+  dimCalculation   Boolean @default(false) @map("dim_calculation")
+  dimRetention     Boolean @default(false) @map("dim_retention")
+  primaryDimension String? @map("primary_dimension")
+  wordEqPairId     String? @map("word_eq_pair_id")
+
+  question Question @relation(fields: [questionId], references: [questionId], onDelete: Cascade)
+
+  @@map("question_dimensions")
+}
+
+// ── Students ────────────────────────────────────────────────────────────────
+model Student {
+  studentId  String   @id @default(uuid()) @map("student_id")
+  name       String?
+  email      String?  @unique
+  school     String?
+  classGrade Int?     @map("class_grade")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  sessions  AssessmentSession[]
+  bktStates BktState[]
+
+  @@map("students")
+}
+
+// ── Assessment Sessions ─────────────────────────────────────────────────────
+model AssessmentSession {
+  sessionId           String    @id @default(uuid()) @map("session_id")
+  studentId           String    @map("student_id")
+  selectedGrade       Int?      @map("selected_grade")
+  currentTheta        Float     @default(0.0) @map("current_theta")
+  currentSkillId      String?   @map("current_skill_id")
+  currentGrade        Int?      @map("current_grade")
+  currentDifficulty   String?   @map("current_difficulty")
+  consecutiveFailures Int       @default(0) @map("consecutive_failures")
+  status              String    @default("in_progress") // in_progress | completed
+  terminationReason   String?   @map("termination_reason") // all_topics_visited | max_questions_reached | all_skills_mastered | time_up
+  startedAt           DateTime  @default(now()) @map("started_at")
+  endedAt             DateTime? @map("ended_at")
+
+  // Engine state (spec Part 3 session flags)
+  twinProbePending    Boolean @default(false) @map("twin_probe_pending")
+  twinOriginQuestion  String? @map("twin_origin_question")
+  pendingConfirmation Boolean @default(false) @map("pending_confirmation")
+  maxQuestions        Int     @default(30) @map("max_questions")
+  // Difficulty bands already served for the current skill (comma-separated), to
+  // enforce "serve each band at least once before advancing topics".
+  bandsServed         String  @default("") @map("bands_served")
+  consecutiveCorrect  Int     @default(0) @map("consecutive_correct")
+  // Ordered list of skill_ids already visited as "topic models" this session.
+  visitedSkills       String  @default("") @map("visited_skills")
+  // Where to return after a prerequisite traversal (skill_id at original grade).
+  returnSkillId       String? @map("return_skill_id")
+  returnGrade         Int?    @map("return_grade")
+
+  student        Student          @relation(fields: [studentId], references: [studentId], onDelete: Cascade)
+  responses      Response[]
+  dimensionScore DimensionScore?
+  traversals     TraversalEvent[]
+  reviewFlags    ReviewFlag[]
+
+  @@index([studentId])
+  @@map("sessions")
+}
+
+// ── Responses ───────────────────────────────────────────────────────────────
+model Response {
+  responseId     Int      @id @default(autoincrement()) @map("response_id")
+  sessionId      String   @map("session_id")
+  questionId     String   @map("question_id")
+  selectedOption String?  @map("selected_option")
+  isCorrect      Boolean? @map("is_correct")
+  trapType       String?  @map("trap_type")
+  skillGapId     String?  @map("skill_gap_id")
+  misconception  String?
+  twinProbe      Boolean  @default(false) @map("twin_probe")
+  // Snapshot of the skill/grade/difficulty this question was served under, and
+  // the engine's routing decision — powers Session Replay.
+  servedSkillId  String?  @map("served_skill_id")
+  servedGrade    Int?     @map("served_grade")
+  servedDifficulty String? @map("served_difficulty")
+  engineDecision String?  @map("engine_decision")
+  thetaAfter     Float?   @map("theta_after")
+  pMasteryAfter  Float?   @map("p_mastery_after")
+  responseTimeMs Int?     @map("response_time_ms")
+  respondedAt    DateTime @default(now()) @map("responded_at")
+
+  session  AssessmentSession @relation(fields: [sessionId], references: [sessionId], onDelete: Cascade)
+  question Question          @relation(fields: [questionId], references: [questionId])
+
+  @@index([sessionId])
+  @@map("responses")
+}
+
+// ── BKT State (per student per skill) ───────────────────────────────────────
+model BktState {
+  studentId   String    @map("student_id")
+  skillId     String    @map("skill_id")
+  pMastery    Float     @default(0.10) @map("p_mastery")
+  attempts    Int       @default(0)
+  lastUpdated DateTime? @map("last_updated")
+
+  student Student @relation(fields: [studentId], references: [studentId], onDelete: Cascade)
+  skill   Skill   @relation(fields: [skillId], references: [skillId], onDelete: Cascade)
+
+  @@id([studentId, skillId])
+  @@map("bkt_state")
+}
+
+// ── Dimension Scores (aggregated per session) ───────────────────────────────
+model DimensionScore {
+  sessionId        String @id @map("session_id")
+  dimReading       Float? @map("dim_reading")
+  dimUnderstanding Float? @map("dim_understanding")
+  dimApplication   Float? @map("dim_application")
+  dimCalculation   Float? @map("dim_calculation")
+  dimRetention     Float? @map("dim_retention")
+
+  session AssessmentSession @relation(fields: [sessionId], references: [sessionId], onDelete: Cascade)
+
+  @@map("dimension_scores")
+}
+
+// ── Prerequisite traversal log (Foundational Gap Chain, spec Part 8.6) ─────
+model TraversalEvent {
+  id          Int      @id @default(autoincrement())
+  sessionId   String   @map("session_id")
+  fromSkillId String   @map("from_skill_id")
+  toSkillId   String   @map("to_skill_id")
+  fromGrade   Int?     @map("from_grade")
+  toGrade     Int?     @map("to_grade")
+  reason      String? // concept_error | foundational_gap | sign_error | easy_fail_streak
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  session AssessmentSession @relation(fields: [sessionId], references: [sessionId], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@map("traversal_events")
+}
+
+// ── Teacher review flags (CDM flag_review action) ──────────────────────────
+model ReviewFlag {
+  id        Int      @id @default(autoincrement())
+  sessionId String   @map("session_id")
+  skillId   String   @map("skill_id")
+  note      String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  session AssessmentSession @relation(fields: [sessionId], references: [sessionId], onDelete: Cascade)
+
+  @@map("review_flags")
+}
+
+// ── App settings (e.g. per-question timer, max questions) ──────────────────
+model Setting {
+  key   String @id
+  value String
+
+  @@map("settings")
+}
+
+// ── Admin users (RBAC: Admin | Teacher | Viewer) ────────────────────────────
+model AdminUser {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  name         String?
+  passwordHash String   @map("password_hash")
+  role         String   @default("Viewer") // Admin | Teacher | Viewer
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("admin_users")
+}
