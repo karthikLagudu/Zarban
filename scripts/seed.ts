@@ -47,6 +47,7 @@ async function main() {
     { email: "admin@zarban.local", name: "Admin", role: "Admin", password: "admin123" },
     { email: "teacher@zarban.local", name: "Teacher", role: "Teacher", password: "teacher123" },
     { email: "viewer@zarban.local", name: "Viewer", role: "Viewer", password: "viewer123" },
+    { email: "editor@zarban.local", name: "Content Editor", role: "Editor", password: "editor123" },
   ];
   for (const u of users) {
     const passwordHash = await bcrypt.hash(u.password, 10);
@@ -69,6 +70,7 @@ async function main() {
 
   console.log("Seed complete.");
   console.log("  Admin logins: admin@zarban.local/admin123, teacher@zarban.local/teacher123, viewer@zarban.local/viewer123");
+  console.log("  Content portal: editor@zarban.local/editor123 (or admin)");
 }
 
 main()

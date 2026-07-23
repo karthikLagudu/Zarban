@@ -1,11 +1,19 @@
 // Admin authentication: bcrypt-verified credentials, signed JWT session
-// cookie (HttpOnly), role-based access control (Admin > Teacher > Viewer).
+// cookie (HttpOnly), role-based access control.
+//
+// Two role axes share one account table:
+//   • Analytics access  (Viewer < Teacher < Admin) — the admin dashboard.
+//   • Content authoring  (Editor, Admin)            — the content portal.
+// Admin sees everything; Editor is a content-only author.
 
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-export type Role = "Admin" | "Teacher" | "Viewer";
+export type Role = "Admin" | "Teacher" | "Viewer" | "Editor";
+
+/** Roles allowed to author learning content. */
+export const CONTENT_ROLES: Role[] = ["Admin", "Editor"];
 
 export interface AdminSession {
   userId: number;
@@ -64,7 +72,14 @@ export function clearSessionCookie() {
   return { name: COOKIE_NAME, value: "", path: "/", maxAge: 0 };
 }
 
-const ROLE_RANK: Record<Role, number> = { Viewer: 1, Teacher: 2, Admin: 3 };
+// Analytics rank. Editor has no analytics privilege (content-only), so it
+// ranks at Viewer level for any requireRole checks it happens to hit.
+const ROLE_RANK: Record<Role, number> = {
+  Viewer: 1,
+  Editor: 1,
+  Teacher: 2,
+  Admin: 3,
+};
 
 /** Returns the session when it meets the minimum role, else a 401/403 response. */
 export async function requireRole(
@@ -80,6 +95,27 @@ export async function requireRole(
     return {
       error: NextResponse.json(
         { error: `Requires ${minimum} role (you are ${session.role})` },
+        { status: 403 }
+      ),
+    };
+  }
+  return { session };
+}
+
+/** Gate a content-portal endpoint to authors (Admin or Editor). */
+export async function requireContentRole(): Promise<
+  { session: AdminSession } | { error: NextResponse }
+> {
+  const session = await readSession();
+  if (!session) {
+    return {
+      error: NextResponse.json({ error: "Not authenticated" }, { status: 401 }),
+    };
+  }
+  if (!CONTENT_ROLES.includes(session.role)) {
+    return {
+      error: NextResponse.json(
+        { error: `Content authoring requires the Admin or Editor role (you are ${session.role})` },
         { status: 403 }
       ),
     };

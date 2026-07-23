@@ -20,10 +20,15 @@ npm run dev
 ```
 
 - **Student flow:** `/` → pick name + grade → adaptive assessment → `/report/:sessionId`
-- **Admin dashboard:** `/admin`
+- **Admin dashboard** (analytics): `/admin`
   - `admin@zarban.local` / `admin123` (Admin)
   - `teacher@zarban.local` / `teacher123` (Teacher)
   - `viewer@zarban.local` / `viewer123` (Viewer)
+- **Content Studio** (authoring): `/content`
+  - `editor@zarban.local` / `editor123` (Editor) — or any Admin
+  - Manage skills + the knowledge graph, author questions with options, learning
+    dimensions, Q-matrix skills and per-option misconception traps, see a content
+    health/coverage dashboard, and round-trip the whole bank via Excel import/export.
 
 ```bash
 npm test           # engine unit tests (BKT/IRT/CAT math)

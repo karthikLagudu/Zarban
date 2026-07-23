@@ -5,6 +5,7 @@
 import { prisma } from "@/lib/db";
 import { MASTERY_THRESHOLD } from "./types";
 import { skillBaseGrade } from "./topics";
+import { computeGradeEquivalent } from "./grade-equivalent";
 
 export interface SkillMasteryRow {
   skillId: string;
@@ -131,7 +132,10 @@ export async function generateReport(sessionId: string): Promise<DiagnosticRepor
 
   const responses = session.responses;
   const modelResponses = responses.filter((r) => !r.twinProbe);
-  const correct = responses.filter((r) => r.isCorrect).length;
+  // Score over model questions only — twin probes are diagnostic, not scored
+  // (spec Part 2.5: "the twin question should not count as a separate model
+  // question — it is a diagnostic probe only").
+  const correct = modelResponses.filter((r) => r.isCorrect).length;
 
   // 1. Skill Mastery Map — every skill touched this session.
   const touchedSkillIds = new Set<string>();
@@ -279,18 +283,24 @@ export async function generateReport(sessionId: string): Promise<DiagnosticRepor
   }
   if (currentChain.length > 0) chains.push(currentChain);
 
-  // θ→grade mapping (inverts item calibration b = (grade − 7.5) × 0.45).
-  const thetaGrade = 7.5 + session.currentTheta / 0.45;
+  // Grade equivalent grounded in the student's observed per-grade accuracy
+  // (not an abstract θ, which saturates to ±4 regardless of item difficulty
+  // and can contradict the scores shown elsewhere in the report).
+  const gradeEquivalent = computeGradeEquivalent(
+    byGrade,
+    gradeEquivalentLevel,
+    session.selectedGrade ?? 7
+  );
+  const narrativeGradeLabel =
+    gradeEquivalent.basis === "demonstrated"
+      ? null
+      : gradeEquivalent.basis === "below_floor"
+        ? "below Grade 5"
+        : gradeEquivalent.basis === "above_ceiling"
+          ? "at Grade 10 and beyond"
+          : `at about Grade ${gradeEquivalent.grade}`;
 
   // 7. Personalised narrative (templated).
-  const narrativeGradeLabel =
-    gradeEquivalentLevel === null
-      ? thetaGrade < 4.5
-        ? "below Grade 5"
-        : thetaGrade > 10.49
-          ? "at Grade 10 and beyond"
-          : `at about Grade ${Math.min(10, Math.max(5, Math.round(thetaGrade)))}`
-      : null;
   const narrative = buildNarrative({
     fallbackGradeLabel: narrativeGradeLabel,
     accuracy: modelResponses.length
@@ -428,40 +438,6 @@ export async function generateReport(sessionId: string): Promise<DiagnosticRepor
     ? Math.round((session.endedAt.getTime() - session.startedAt.getTime()) / 1000)
     : null;
 
-  // Always-present grade equivalent: the demonstrated rule when it applies,
-  // otherwise an estimate from θ.
-  let gradeEquivalent: DiagnosticReport["gradeEquivalent"];
-  if (gradeEquivalentLevel !== null) {
-    gradeEquivalent = {
-      label: `Grade ${gradeEquivalentLevel}`,
-      short: `G${gradeEquivalentLevel}`,
-      grade: gradeEquivalentLevel,
-      basis: "demonstrated",
-    };
-  } else if (thetaGrade < 4.5) {
-    gradeEquivalent = {
-      label: "Below Grade 5",
-      short: "<G5",
-      grade: null,
-      basis: "below_floor",
-    };
-  } else if (thetaGrade > 10.49) {
-    gradeEquivalent = {
-      label: "Grade 10+",
-      short: "G10+",
-      grade: 10,
-      basis: "above_ceiling",
-    };
-  } else {
-    const g = Math.min(10, Math.max(5, Math.round(thetaGrade)));
-    gradeEquivalent = {
-      label: `≈ Grade ${g}`,
-      short: `≈G${g}`,
-      grade: g,
-      basis: "estimated",
-    };
-  }
-
   const lastDecision = responses.at(-1)?.engineDecision ?? null;
   return {
     durationSeconds,
@@ -489,8 +465,8 @@ export async function generateReport(sessionId: string): Promise<DiagnosticRepor
       modelQuestions: modelResponses.length,
       twinProbes: responses.length - modelResponses.length,
       correct,
-      accuracy: responses.length
-        ? Math.round((correct / responses.length) * 1000) / 10
+      accuracy: modelResponses.length
+        ? Math.round((correct / modelResponses.length) * 1000) / 10
         : 0,
     },
     theta: Math.round(session.currentTheta * 100) / 100,
@@ -549,11 +525,19 @@ function buildNarrative(input: {
     }
   } else if (input.fallbackGradeLabel) {
     out.push(
-      `You answered ${acc}% of questions correctly — your ability estimate places you ${input.fallbackGradeLabel} against a Grade ${input.selectedGrade} syllabus.`
+      `You answered ${acc}% of questions correctly, which places you ${input.fallbackGradeLabel} against a Grade ${input.selectedGrade} syllabus.`
     );
   } else {
     out.push(
       `You answered ${acc}% of questions correctly in this diagnostic session.`
+    );
+  }
+
+  // Near-chance caveat: a 4-option MCQ scores ~25% by pure guessing, so a very
+  // low score gives no reliable grade signal — say so rather than over-claim.
+  if (acc > 0 && acc <= 35) {
+    out.push(
+      `This score is close to what random guessing would produce, so the grade estimate is low-confidence — a calmer retake will give a clearer picture.`
     );
   }
 
