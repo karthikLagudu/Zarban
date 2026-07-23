@@ -15,8 +15,9 @@
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "generate:workbook": "tsx scripts/generate-workbook.ts",
+    "verify:workbook": "tsx scripts/verify-workbook.ts",
     "seed": "tsx scripts/seed.ts",
-    "setup": "npm run db:push && npm run generate:workbook && npm run seed"
+    "setup": "npm run db:push && npm run generate:workbook && npm run verify:workbook && npm run seed"
   },
   "dependencies": {
     "@prisma/adapter-d1": "6.19.3",

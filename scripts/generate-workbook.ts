@@ -125,6 +125,43 @@ function placeOptions(
   };
 }
 
+// Generic distractors used only as a last resort when a genuine one collides
+// with another option and can't be nudged numerically.
+const FALLBACK_DISTRACTORS = [
+  "None of these",
+  "Cannot be determined",
+  "All of these",
+  "Not enough information",
+];
+
+/** Guarantee the correct answer + 3 distractors are all distinct option texts.
+ *  Numeric collisions are incremented; stubborn non-numeric ones are swapped
+ *  for a generic distractor. Runs for main questions AND equation twins. */
+function ensureDistinctOptions(
+  correct: string,
+  distractors: DistractorSpec[]
+): DistractorSpec[] {
+  const norm = (t: string) => t.trim().toLowerCase();
+  const seen = new Set([norm(correct)]);
+  return distractors.map((d) => {
+    let text = d.text;
+    let bump = 1;
+    while (seen.has(norm(text))) {
+      const n = Number(text);
+      if (Number.isFinite(n) && text.trim() !== "") {
+        text = String(n + bump);
+        bump += 1;
+      } else break;
+    }
+    if (seen.has(norm(text))) {
+      const fb = FALLBACK_DISTRACTORS.find((f) => !seen.has(norm(f)));
+      if (fb) text = fb;
+    }
+    seen.add(norm(text));
+    return { ...d, text };
+  });
+}
+
 function emitQuestion(
   skill: SkillDef,
   band: Band,
@@ -145,7 +182,8 @@ function emitQuestion(
   rng: () => number
 ): string {
   const id = nextId(grade, skill.slug);
-  const placed = placeOptions(spec.correct, spec.distractors, rng);
+  const distractors = ensureDistinctOptions(spec.correct, spec.distractors);
+  const placed = placeOptions(spec.correct, distractors, rng);
 
   questionRows.push({
     question_id: id,
@@ -206,17 +244,50 @@ function emitQuestion(
 // ── Generate ─────────────────────────────────────────────────────────────────
 
 const rng = mulberry32(20260717);
+// A deeper bank: more items per {skill, difficulty} cell gives the CAT engine
+// real choice near each ability level and keeps retakes fresh (the engine
+// soft-avoids items a student has already seen).
 const PLAN: [Band, number][] = [
-  ["easy", 3],
-  ["medium", 3],
-  ["hard", 2],
+  ["easy", 5],
+  ["medium", 6],
+  ["hard", 5],
 ];
+
+// Full-signature de-duplication: within a {skill, band} every emitted item
+// must have a unique combination of stem + option set. Parametric builders are
+// retried with fresh randomness until a new item appears; when a builder's
+// question space is exhausted the cell simply gets fewer (but distinct) items
+// rather than padded duplicates.
+const seenItems = new Map<string, Set<string>>();
+function itemSignature(spec: { stem: string; correct: string; distractors: DistractorSpec[] }) {
+  const opts = ensureDistinctOptions(spec.correct, spec.distractors).map((d) => d.text);
+  return (
+    spec.stem.trim().toLowerCase() +
+    "" +
+    [spec.correct, ...opts].map((x) => String(x).trim().toLowerCase()).sort().join("")
+  );
+}
+function uniqueSpec(skill: SkillDef, band: Band, v: number) {
+  const key = `${skill.skill_id}_${band}`;
+  const seen = seenItems.get(key) ?? new Set<string>();
+  seenItems.set(key, seen);
+  for (let attempt = 0; attempt < 40; attempt++) {
+    const spec = buildQuestion(skill, band, v + attempt, rng);
+    const sig = itemSignature(spec);
+    if (!seen.has(sig)) {
+      seen.add(sig);
+      return spec;
+    }
+  }
+  return null; // builder space exhausted for this cell
+}
 
 for (const skill of SKILLS) {
   const grade = baseGrade(skill);
   for (const [band, count] of PLAN) {
     for (let v = 0; v < count; v++) {
-      const spec = buildQuestion(skill, band, v, rng);
+      const spec = uniqueSpec(skill, band, v);
+      if (!spec) continue; // no more distinct items available for this cell
 
       let twinId = "";
       if (spec.isWordProblem && spec.twin) {

@@ -903,11 +903,19 @@ const BUILDERS: Record<string, Builder> = {
         { calculation: true }
       );
     }
-    const vals: [string, string, string, string][] = [
-      ["-3/4", "-2/3", "-3/4", "Between -1 and 0, -3/4 lies further left"],
-      ["-5/6", "-1/2", "-5/6", "Denominators must be compared via common form"],
+    // Compare two negative rationals; the more-negative one is smaller.
+    const pairs: [number, number, number, number][] = [
+      [3, 4, 2, 3],
+      [5, 6, 1, 2],
+      [2, 3, 3, 5],
+      [7, 8, 3, 4],
+      [4, 5, 5, 7],
+      [5, 8, 2, 3],
     ];
-    const [x, y, smaller] = pick(rng, vals);
+    const [n1, d1, n2, d2] = pick(rng, pairs);
+    const x = `-${n1}/${d1}`;
+    const y = `-${n2}/${d2}`;
+    const smaller = n1 / d1 > n2 / d2 ? x : y; // larger magnitude ⇒ more negative
     return q(
       `Which is smaller: ${x} or ${y}?`,
       smaller,
@@ -1431,8 +1439,8 @@ const BUILDERS: Record<string, Builder> = {
   // S_024 Comparing Quantities (CI)
   S_024: (band, i, rng) => {
     if (band === "easy") {
-      const P = pick(rng, [1000, 2000]);
-      const R = 10;
+      const P = pick(rng, [1000, 1500, 2000, 2500, 4000, 6000]);
+      const R = pick(rng, [5, 8, 10, 12, 15]);
       const A1 = P + (P * R) / 100;
       return q(
         `₹${P} grows at ${R}% per year. What is the amount after 1 year?`,
@@ -1447,8 +1455,8 @@ const BUILDERS: Record<string, Builder> = {
       );
     }
     if (band === "medium") {
-      const P = pick(rng, [1000, 5000]);
-      const R = 10;
+      const P = pick(rng, [1000, 2000, 4000, 5000, 8000, 10000]);
+      const R = pick(rng, [5, 10, 20]);
       const CI2 = P * Math.pow(1 + R / 100, 2) - P;
       const SI2 = (P * R * 2) / 100;
       return q(
@@ -1655,13 +1663,25 @@ const BUILDERS: Record<string, Builder> = {
   // S_028 Number Systems (Real Numbers)
   S_028: (band, i, rng) => {
     if (band === "easy") {
+      const irr = pick(rng, ["√2", "√3", "√5", "√7", "√10", "π"]);
+      const ratChoices = [
+        ["22/7", "Rational vs Irrational Confusion", "22/7 is a ratio of integers — rational (it only approximates π)."],
+        ["0.5", "Terminating Decimal Misclassified", "Terminating decimals are rational."],
+        ["4/9", "Fraction Misclassified", "Any fraction of integers is rational."],
+        ["0.333…", "Repeating Decimal Misclassified", "A repeating decimal is rational (= 1/3)."],
+        ["√16", "Perfect Square Root", "√16 = 4, a whole number — rational."],
+        ["1.25", "Terminating Decimal Misclassified", "Terminating decimals are rational."],
+      ] as [string, string, string][];
+      // pick three distinct rational distractors
+      const start = int(rng, 0, ratChoices.length - 1);
+      const picks = [0, 1, 2].map((k) => ratChoices[(start + k) % ratChoices.length]);
       return q(
         `Which of the following is an irrational number?`,
-        "√2",
+        irr,
         [
-          concept("22/7", "Rational vs Irrational Confusion", "22/7 is a ratio of integers — rational (it only approximates π)."),
-          concept("0.5", "Terminating Decimal Misclassified", "Terminating decimals are rational."),
-          slip("4/9"),
+          concept(picks[0][0], picks[0][1], picks[0][2]),
+          concept(picks[1][0], picks[1][1], picks[1][2]),
+          slip(picks[2][0]),
         ],
         "Understanding",
         { understanding: true }
@@ -1929,13 +1949,23 @@ const BUILDERS: Record<string, Builder> = {
   // S_033 Probability
   S_033: (band, i, rng) => {
     if (band === "easy") {
+      // A single-event probability, varied across common experiments.
+      const scenarios: { stem: string; correct: string; total: number }[] = [
+        { stem: "A fair coin is tossed once. What is the probability of getting heads?", correct: "1/2", total: 2 },
+        { stem: "A die is rolled once. What is the probability of getting a 4?", correct: "1/6", total: 6 },
+        { stem: "A die is rolled once. What is the probability of getting an even number?", correct: "1/2", total: 6 },
+        { stem: "A letter is picked from the word MATH. What is the probability it is a vowel?", correct: "1/4", total: 4 },
+        { stem: "A day is chosen at random from a week. What is the probability it is a Sunday?", correct: "1/7", total: 7 },
+        { stem: "A die is rolled once. What is the probability of getting a number less than 3?", correct: "1/3", total: 6 },
+      ];
+      const sc = pick(rng, scenarios);
       return q(
-        `A fair coin is tossed once. What is the probability of getting heads?`,
-        "1/2",
+        sc.stem,
+        sc.correct,
         [
-          concept("1", "Certainty Confusion", "Probability 1 means certain — a coin toss is not certain."),
-          proc("1/4", "Sample Space Error", "Used 4 outcomes — a single coin toss has only 2."),
-          slip("2/1"),
+          concept("1", "Certainty Confusion", "Probability 1 means certain — this event is not guaranteed."),
+          proc(`1/${sc.total + 1}`, "Sample Space Error", `Miscounted the total number of equally likely outcomes (${sc.total}).`),
+          slip(sc.correct.split("/").reverse().join("/")),
         ],
         "Understanding",
         { understanding: true }
