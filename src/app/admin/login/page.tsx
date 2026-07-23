@@ -21,8 +21,9 @@ export default function AdminLoginPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Login failed");
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : {};
+      if (!res.ok) throw new Error(data.error ?? `Login failed (${res.status})`);
       router.replace("/admin");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");

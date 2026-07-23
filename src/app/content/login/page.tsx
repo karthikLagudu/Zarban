@@ -21,8 +21,9 @@ export default function ContentLoginPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Login failed");
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : {};
+      if (!res.ok) throw new Error(data.error ?? `Login failed (${res.status})`);
       if (!["Admin", "Editor"].includes(data.user?.role)) {
         throw new Error("This account has no content-authoring access.");
       }

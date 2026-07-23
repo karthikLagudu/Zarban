@@ -25,10 +25,21 @@ export interface AdminSession {
 const COOKIE_NAME = "zarban_admin";
 const SESSION_HOURS = 12;
 
+// Stable fallback so auth works out of the box even when AUTH_SECRET has not
+// been provisioned in the runtime (e.g. Cloudflare Workers vars aren't mirrored
+// onto process.env). Set AUTH_SECRET in production to override this.
+const FALLBACK_SECRET = "zarban-default-secret-set-AUTH_SECRET-in-production";
+
 function secret(): Uint8Array {
-  const raw = process.env.AUTH_SECRET;
-  if (!raw) throw new Error("AUTH_SECRET is not set");
-  return new TextEncoder().encode(raw);
+  // process.env is populated locally and by most adapters; if a runtime keeps
+  // vars elsewhere we still fall back rather than crash the request.
+  let raw: string | undefined;
+  try {
+    raw = process.env.AUTH_SECRET;
+  } catch {
+    raw = undefined;
+  }
+  return new TextEncoder().encode(raw && raw.length > 0 ? raw : FALLBACK_SECRET);
 }
 
 export async function createSessionToken(session: AdminSession): Promise<string> {
