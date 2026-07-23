@@ -13,7 +13,9 @@ export async function POST(req: NextRequest) {
     }
 
     const user = await prisma.adminUser.findUnique({ where: { email } });
-    if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+    // Use the synchronous compare — bcryptjs's async path relies on a task
+    // scheduler that isn't reliably present in the Workers runtime.
+    if (!user || !bcrypt.compareSync(password, user.passwordHash)) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
 
@@ -30,9 +32,12 @@ export async function POST(req: NextRequest) {
     return res;
   } catch (e) {
     // Never let the handler return an empty body — the client parses JSON.
+    // Surface the underlying reason so misconfiguration (e.g. an un-migrated
+    // database) is diagnosable rather than a generic wall.
     console.error("admin login failed", e);
+    const detail = e instanceof Error ? e.message : String(e);
     return NextResponse.json(
-      { error: "Sign-in is temporarily unavailable. Please try again." },
+      { error: "Sign-in failed", detail },
       { status: 500 }
     );
   }

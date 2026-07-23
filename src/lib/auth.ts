@@ -68,12 +68,18 @@ export async function readSession(): Promise<AdminSession | null> {
 }
 
 export function sessionCookie(token: string) {
+  let isProd = false;
+  try {
+    isProd = process.env.NODE_ENV === "production";
+  } catch {
+    isProd = false;
+  }
   return {
     name: COOKIE_NAME,
     value: token,
     httpOnly: true,
     sameSite: "lax" as const,
-    secure: process.env.NODE_ENV === "production",
+    secure: isProd,
     path: "/",
     maxAge: SESSION_HOURS * 3600,
   };
