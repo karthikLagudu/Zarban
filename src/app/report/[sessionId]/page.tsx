@@ -15,6 +15,7 @@ import {
   FileDown,
   GitBranch,
   ListChecks,
+  Microscope,
   Printer,
   Target,
   Timer,
@@ -531,6 +532,13 @@ export default function ReportPage({
           >
             <FileDown className="h-5 w-5" />
             Download PDF report
+          </a>
+          <a
+            href={`/report/${sessionId}/analysis`}
+            className="flex items-center gap-2 rounded-2xl border border-indigo-200 bg-indigo-50 px-6 py-3 font-semibold text-indigo-700 shadow-sm transition hover:bg-indigo-100"
+          >
+            <Microscope className="h-5 w-5" />
+            Detailed analysis
           </a>
           <a
             href="/"

@@ -27,17 +27,33 @@ export interface QuestionAnalysisRow {
   isCorrect: boolean;
   twinProbe: boolean;
   skillName: string | null;
+  topicArea: string | null;
   grade: number | null;
   difficulty: string | null;
   primaryDimension: string | null;
   timeMs: number | null;
   /** how this answer's time compares with the student's own average */
   pace: "quick" | "steady" | "slow" | null;
+  /** engine state after this answer — powers the detailed-analysis charts */
+  thetaAfter: number | null;
+  pMasteryAfter: number | null;
   trapType: string | null;
   misconception: string | null;
   misconceptionDetail: string | null;
   /** what to practise next, from the CDM trap's remedial routing */
   practiceNext: { skillName: string; grade: number | null } | null;
+}
+
+export interface SkillBreakdownRow {
+  skillId: string;
+  skillName: string;
+  topicArea: string | null;
+  gradeLevel: string | null;
+  attempts: number;
+  correct: number;
+  accuracy: number; // %
+  avgMs: number | null;
+  finalMastery: number | null; // final P(L), 0..1
 }
 
 export interface DiagnosticReport {
@@ -61,6 +77,15 @@ export interface DiagnosticReport {
     accuracy: number;
   }[];
   questionAnalysis: QuestionAnalysisRow[];
+  /** Per-skill aggregates for the detailed-analysis page. */
+  skillBreakdown: SkillBreakdownRow[];
+  /** Per-topic-area accuracy for the detailed-analysis page. */
+  topicBreakdown: {
+    topic: string;
+    attempts: number;
+    correct: number;
+    accuracy: number;
+  }[];
   /** Always-present grade equivalent. "demonstrated" = met the ≥70% over ≥3
    *  questions rule; otherwise estimated from the IRT ability θ. */
   gradeEquivalent: {
@@ -390,17 +415,76 @@ export async function generateReport(sessionId: string): Promise<DiagnosticRepor
       isCorrect: r.isCorrect === true,
       twinProbe: r.twinProbe,
       skillName: skill?.skillName ?? null,
+      topicArea: skill?.topicArea ?? null,
       grade: r.servedGrade ?? q.gradeLevel,
       difficulty: r.servedDifficulty ?? q.difficultyBand,
       primaryDimension: q.dimensions?.primaryDimension ?? null,
       timeMs: t,
       pace,
+      thetaAfter: r.thetaAfter,
+      pMasteryAfter: r.pMasteryAfter,
       trapType: r.trapType ?? trap?.trapType ?? null,
       misconception: r.misconception ?? trap?.misconception ?? null,
       misconceptionDetail: trap?.misconceptionDetail ?? null,
       practiceNext,
     };
   });
+
+  // Per-skill and per-topic aggregates (detailed-analysis page).
+  const finalPL = new Map(bktRows.map((b) => [b.skillId, b.pMastery]));
+  const skillAgg = new Map<
+    string,
+    { attempts: number; correct: number; timeSum: number; timeCount: number }
+  >();
+  for (const r of modelResponses) {
+    const sid = r.question.primarySkillId ?? r.servedSkillId;
+    if (!sid) continue;
+    const agg =
+      skillAgg.get(sid) ?? { attempts: 0, correct: 0, timeSum: 0, timeCount: 0 };
+    agg.attempts += 1;
+    if (r.isCorrect) agg.correct += 1;
+    if (r.responseTimeMs && r.responseTimeMs > 0) {
+      agg.timeSum += r.responseTimeMs;
+      agg.timeCount += 1;
+    }
+    skillAgg.set(sid, agg);
+  }
+  const skillBreakdown: SkillBreakdownRow[] = [...skillAgg.entries()]
+    .map(([sid, agg]) => {
+      const sk = skillMap.get(sid);
+      return {
+        skillId: sid,
+        skillName: sk?.skillName ?? sid,
+        topicArea: sk?.topicArea ?? null,
+        gradeLevel: sk?.gradeLevel ?? null,
+        attempts: agg.attempts,
+        correct: agg.correct,
+        accuracy: Math.round((agg.correct / agg.attempts) * 1000) / 10,
+        avgMs: agg.timeCount ? Math.round(agg.timeSum / agg.timeCount) : null,
+        finalMastery: finalPL.get(sid) ?? null,
+      };
+    })
+    .sort((a, b) => a.accuracy - b.accuracy);
+
+  const topicAgg = new Map<string, { attempts: number; correct: number }>();
+  for (const r of modelResponses) {
+    const sk = r.question.primarySkillId
+      ? skillMap.get(r.question.primarySkillId)
+      : null;
+    const topic = sk?.topicArea ?? "General";
+    const agg = topicAgg.get(topic) ?? { attempts: 0, correct: 0 };
+    agg.attempts += 1;
+    if (r.isCorrect) agg.correct += 1;
+    topicAgg.set(topic, agg);
+  }
+  const topicBreakdown = [...topicAgg.entries()]
+    .map(([topic, agg]) => ({
+      topic,
+      attempts: agg.attempts,
+      correct: agg.correct,
+      accuracy: Math.round((agg.correct / agg.attempts) * 1000) / 10,
+    }))
+    .sort((a, b) => a.accuracy - b.accuracy);
 
   // Accuracy by difficulty band.
   const bandAgg = new Map<string, { total: number; correct: number }>();
@@ -444,6 +528,8 @@ export async function generateReport(sessionId: string): Promise<DiagnosticRepor
     timing,
     performanceByBand,
     questionAnalysis,
+    skillBreakdown,
+    topicBreakdown,
     gradeEquivalent,
     sessionId,
     student: {
