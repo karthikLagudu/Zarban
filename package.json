@@ -16,6 +16,7 @@
     "db:generate": "prisma generate",
     "generate:workbook": "tsx scripts/generate-workbook.ts",
     "verify:workbook": "tsx scripts/verify-workbook.ts",
+    "e2e": "tsx scripts/e2e.ts",
     "seed": "tsx scripts/seed.ts",
     "setup": "npm run db:push && npm run generate:workbook && npm run verify:workbook && npm run seed"
   },

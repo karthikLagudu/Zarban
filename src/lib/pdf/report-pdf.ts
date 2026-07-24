@@ -7,6 +7,7 @@
 import PDFDocument from "pdfkit";
 import * as fs from "fs";
 import type { DiagnosticReport } from "@/lib/engine/report";
+import { NOTO_SANS_REGULAR_BASE64 } from "./noto-font";
 
 function fmtDuration(totalSeconds: number): string {
   const m = Math.floor(totalSeconds / 60);
@@ -42,7 +43,13 @@ const BOTTOM = PAGE_H - 56; // keep clear of the footer
 
 let unicodeFonts = false;
 
-/** Try to register a Unicode system font (₹ √ θ → …); fall back to Helvetica. */
+/**
+ * Register the document fonts. Prefer a rich Unicode system font when running
+ * on a host that has one (nicer ₹ √ θ glyphs); otherwise fall back to an
+ * EMBEDDED font buffer. We never register pdfkit's standard "Helvetica",
+ * because that lazily reads an .afm metrics file from the filesystem — which
+ * the Cloudflare Workers runtime does not have, crashing the export.
+ */
 function registerFonts(doc: PDFKit.PDFDocument) {
   const candidates: [string, string][] = [
     ["C:\\Windows\\Fonts\\arial.ttf", "C:\\Windows\\Fonts\\arialbd.ttf"],
@@ -65,11 +72,14 @@ function registerFonts(doc: PDFKit.PDFDocument) {
         return;
       }
     } catch {
-      // try next candidate
+      // filesystem not available (Workers) — fall through to the embedded font
     }
   }
-  doc.registerFont("Body", "Helvetica");
-  doc.registerFont("Bold", "Helvetica-Bold");
+  // Embedded fallback: one compact TTF used for both weights. Special symbols
+  // are transliterated to ASCII by T() since this subset is Latin-only.
+  const buf = Buffer.from(NOTO_SANS_REGULAR_BASE64, "base64");
+  doc.registerFont("Body", buf);
+  doc.registerFont("Bold", buf);
   unicodeFonts = false;
 }
 
@@ -142,6 +152,11 @@ export async function renderReportPdf(report: DiagnosticReport): Promise<Buffer>
     size: "A4",
     margins: { top: M, bottom: 0, left: M, right: M },
     bufferPages: true,
+    // `font: false` stops pdfkit's constructor from eagerly initialising the
+    // standard "Helvetica" font, which reads an .afm file from disk and crashes
+    // in the filesystem-less Cloudflare Workers runtime. We register our own
+    // font immediately below instead.
+    font: false as unknown as string,
     info: {
       Title: `Zarban Diagnostic Report — ${report.student.name ?? "Student"}`,
       Author: "Zarban Adaptive Math Assessment",
@@ -149,6 +164,7 @@ export async function renderReportPdf(report: DiagnosticReport): Promise<Buffer>
     },
   });
   registerFonts(doc);
+  doc.font("Body"); // make the embedded font current before any text is drawn
 
   const chunks: Buffer[] = [];
   doc.on("data", (c: Buffer) => chunks.push(c));
