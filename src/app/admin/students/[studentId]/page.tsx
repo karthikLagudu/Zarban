@@ -53,7 +53,15 @@ export default function StudentDetailPage({
   }, [studentId]);
 
   if (error) return <p className="text-rose-600">{error}</p>;
-  if (!detail) return <p className="text-slate-400">Loading student…</p>;
+  if (!detail)
+    return (
+      <div className="mx-auto max-w-5xl">
+        <div className="skeleton h-6 w-32" />
+        <div className="skeleton mt-3 h-8 w-64" />
+        <div className="skeleton mt-6 h-56 rounded-3xl" />
+        <div className="skeleton mt-6 h-56 rounded-3xl" />
+      </div>
+    );
 
   const { student } = detail;
 

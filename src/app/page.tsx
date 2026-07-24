@@ -3,7 +3,7 @@
 // Landing / Grade Selection (spec 5.1.1): name, school, grade cards.
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   BrainCircuit,
   ChartSpline,
@@ -33,6 +33,13 @@ const FEATURES = [
   },
 ];
 
+interface ResumeInfo {
+  sessionId: string;
+  studentName: string;
+  grade: number;
+  startedAtMs: number;
+}
+
 export default function LandingPage() {
   const router = useRouter();
   const [name, setName] = useState("");
@@ -40,6 +47,42 @@ export default function LandingPage() {
   const [grade, setGrade] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resume, setResume] = useState<ResumeInfo | null>(null);
+
+  // Continuity: offer to resume an in-progress test (state survives tab and
+  // browser restarts via localStorage) and prefill the last-used details.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("zarban_assessment");
+      if (raw) {
+        const s = JSON.parse(raw);
+        if (s?.step && !s.step.done && s.sessionId) {
+          setResume({
+            sessionId: s.sessionId,
+            studentName: s.studentName ?? "Student",
+            grade: s.grade ?? 0,
+            startedAtMs: s.startedAtMs ?? Date.now(),
+          });
+        } else {
+          localStorage.removeItem("zarban_assessment");
+        }
+      }
+      const profile = localStorage.getItem("zarban_profile");
+      if (profile) {
+        const p = JSON.parse(profile);
+        if (p.name) setName(p.name);
+        if (p.school) setSchool(p.school);
+        if (p.grade) setGrade(p.grade);
+      }
+    } catch {
+      // corrupted storage — start fresh
+    }
+  }, []);
+
+  function discardResume() {
+    localStorage.removeItem("zarban_assessment");
+    setResume(null);
+  }
 
   async function start() {
     if (!name.trim() || grade === null) {
@@ -56,7 +99,7 @@ export default function LandingPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Could not start the assessment");
-      sessionStorage.setItem(
+      localStorage.setItem(
         "zarban_assessment",
         JSON.stringify({
           sessionId: data.session_id,
@@ -66,6 +109,10 @@ export default function LandingPage() {
           studentName: name,
           grade,
         })
+      );
+      localStorage.setItem(
+        "zarban_profile",
+        JSON.stringify({ name: name.trim(), school: school.trim(), grade })
       );
       router.push("/assessment");
     } catch (e) {
@@ -124,6 +171,31 @@ export default function LandingPage() {
 
         {/* Right: start card */}
         <div className="animate-fade-up delay-2">
+          {resume && (
+            <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50/90 p-5 shadow-sm backdrop-blur">
+              <p className="text-sm font-bold text-amber-900">
+                ⏸ You have a test in progress
+              </p>
+              <p className="mt-0.5 text-xs text-amber-700">
+                {resume.studentName} · Class {resume.grade} — picked up right where
+                you left off, nothing is lost.
+              </p>
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={() => router.push("/assessment")}
+                  className="rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:brightness-110"
+                >
+                  Continue test
+                </button>
+                <button
+                  onClick={discardResume}
+                  className="rounded-lg border border-amber-300 bg-white px-4 py-2 text-sm font-semibold text-amber-700 transition hover:bg-amber-50"
+                >
+                  Discard & start over
+                </button>
+              </div>
+            </div>
+          )}
           <div className="rounded-3xl border border-white/60 bg-white/80 p-8 shadow-xl shadow-indigo-100/60 backdrop-blur">
             <div className="flex items-center gap-3">
               <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md">
@@ -139,7 +211,13 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div className="mt-7 grid gap-5">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                void start();
+              }}
+              className="mt-7 grid gap-5"
+            >
               <label className="grid gap-1.5">
                 <span className="text-sm font-medium text-slate-700">Your name</span>
                 <input
@@ -167,6 +245,7 @@ export default function LandingPage() {
                   {GRADES.map((g) => (
                     <button
                       key={g}
+                      type="button"
                       onClick={() => setGrade(g)}
                       className={`group relative rounded-xl border px-2 py-3 text-center transition-all ${
                         grade === g
@@ -194,7 +273,7 @@ export default function LandingPage() {
               )}
 
               <button
-                onClick={start}
+                type="submit"
                 disabled={busy}
                 className="mt-1 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-6 py-3.5 text-lg font-semibold text-white shadow-lg shadow-indigo-200 transition hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
               >
@@ -210,7 +289,7 @@ export default function LandingPage() {
               <p className="text-center text-xs text-slate-400">
                 Powered by CAT · IRT · CDM · BKT diagnostics
               </p>
-            </div>
+            </form>
           </div>
 
           <footer className="mt-6 text-center text-xs text-slate-400">

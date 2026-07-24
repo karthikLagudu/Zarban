@@ -44,7 +44,17 @@ export default function AnalyticsPage() {
       .catch(() => {});
   }, []);
 
-  if (!data) return <p className="text-slate-400">Loading analytics…</p>;
+  if (!data)
+    return (
+      <div className="mx-auto max-w-5xl">
+        <div className="skeleton h-8 w-48" />
+        <div className="skeleton mt-6 h-64 rounded-3xl" />
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          <div className="skeleton h-72 rounded-3xl" />
+          <div className="skeleton h-72 rounded-3xl" />
+        </div>
+      </div>
+    );
 
   // Pivot trend data for recharts: one row per week, one column per grade.
   const gradesSeen = [

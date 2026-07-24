@@ -53,7 +53,7 @@ export default function AssessmentPage() {
   const submittingRef = useRef(false);
 
   useEffect(() => {
-    const raw = sessionStorage.getItem("zarban_assessment");
+    const raw = localStorage.getItem("zarban_assessment");
     if (!raw) {
       router.replace("/");
       return;
@@ -76,28 +76,40 @@ export default function AssessmentPage() {
       submittingRef.current = true;
       setBusy(true);
       setError(null);
-      try {
-        const res = await fetch("/api/session/respond", {
+      const body = JSON.stringify({
+        session_id: state.sessionId,
+        question_id: state.step.question.questionId,
+        // Timer expiry with no choice submits "X" — always wrong, so the
+        // engine treats it as an incorrect response and adapts.
+        selected_option: option ?? "X",
+        response_time_ms: Date.now() - questionStartedAt.current,
+      });
+      // One silent retry so a momentary network blip never strands the student.
+      const post = () =>
+        fetch("/api/session/respond", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            session_id: state.sessionId,
-            question_id: state.step.question.questionId,
-            // Timer expiry with no choice submits "X" — always wrong, so the
-            // engine treats it as an incorrect response and adapts.
-            selected_option: option ?? "X",
-            response_time_ms: Date.now() - questionStartedAt.current,
-          }),
+          body,
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error ?? "Could not submit the answer");
+      try {
+        let res: Response;
+        try {
+          res = await post();
+        } catch {
+          await new Promise((r) => setTimeout(r, 800));
+          res = await post();
+        }
+        const text = await res.text();
+        const data = text ? JSON.parse(text) : {};
+        if (!res.ok) throw new Error(data.error ?? `Could not submit (${res.status})`);
         const step: Step = data.step;
         const next: StoredState = { ...state, step };
-        sessionStorage.setItem("zarban_assessment", JSON.stringify(next));
         if (step.done) {
+          localStorage.removeItem("zarban_assessment");
           router.push(`/report/${state.sessionId}`);
           return;
         }
+        localStorage.setItem("zarban_assessment", JSON.stringify(next));
         setState(next);
         setSelected(null);
         questionStartedAt.current = Date.now();

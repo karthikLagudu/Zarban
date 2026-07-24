@@ -56,7 +56,18 @@ export default function SessionReplayPage({
   }, [sessionId]);
 
   if (error) return <p className="text-rose-600">{error}</p>;
-  if (!data) return <p className="text-slate-400">Loading replay…</p>;
+  if (!data)
+    return (
+      <div className="mx-auto max-w-5xl">
+        <div className="skeleton h-6 w-40" />
+        <div className="skeleton mt-3 h-8 w-56" />
+        <div className="mt-6 space-y-4">
+          <div className="skeleton h-28 rounded-2xl" />
+          <div className="skeleton h-28 rounded-2xl" />
+          <div className="skeleton h-28 rounded-2xl" />
+        </div>
+      </div>
+    );
 
   const { session, timeline } = data;
 
@@ -79,6 +90,14 @@ export default function SessionReplayPage({
             className="font-medium text-indigo-600 hover:underline"
           >
             open report ↗
+          </a>{" "}
+          ·{" "}
+          <a
+            href={`/report/${session.sessionId}/analysis`}
+            target="_blank"
+            className="font-medium text-violet-600 hover:underline"
+          >
+            detailed analysis ↗
           </a>
         </p>
       </div>
