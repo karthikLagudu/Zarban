@@ -5,6 +5,8 @@
 
 import Link from "next/link";
 import { use, useEffect, useState } from "react";
+import { School } from "lucide-react";
+import { useAdmin } from "../../admin-context";
 
 interface Detail {
   student: {
@@ -13,6 +15,8 @@ interface Detail {
     email: string | null;
     school: string | null;
     classGrade: number | null;
+    classroomId: string | null;
+    classroomName: string | null;
     createdAt: string;
   };
   sessions: {
@@ -39,8 +43,12 @@ export default function StudentDetailPage({
   params: Promise<{ studentId: string }>;
 }) {
   const { studentId } = use(params);
+  const me = useAdmin();
+  const canEdit = me?.role === "Admin";
   const [detail, setDetail] = useState<Detail | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [classrooms, setClassrooms] = useState<{ classroomId: string; name: string }[]>([]);
+  const [savingRoom, setSavingRoom] = useState(false);
 
   useEffect(() => {
     fetch(`/api/admin/students/${studentId}`)
@@ -51,6 +59,38 @@ export default function StudentDetailPage({
       })
       .catch((e) => setError(e.message));
   }, [studentId]);
+
+  useEffect(() => {
+    fetch("/api/admin/classrooms")
+      .then((r) => r.json())
+      .then((d) => setClassrooms(d.classrooms ?? []))
+      .catch(() => {});
+  }, []);
+
+  async function assignClassroom(classroomId: string) {
+    setSavingRoom(true);
+    const r = await fetch(`/api/admin/students/${studentId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ classroomId: classroomId || null }),
+    });
+    const d = await r.json();
+    setSavingRoom(false);
+    if (r.ok) {
+      setDetail((prev) =>
+        prev
+          ? {
+              ...prev,
+              student: {
+                ...prev.student,
+                classroomId: d.classroomId,
+                classroomName: d.classroomName,
+              },
+            }
+          : prev
+      );
+    }
+  }
 
   if (error) return <p className="text-rose-600">{error}</p>;
   if (!detail)
@@ -78,6 +118,45 @@ export default function StudentDetailPage({
         {student.email ?? "no email"} · joined{" "}
         {new Date(student.createdAt).toLocaleDateString()}
       </p>
+
+      {/* Classroom assignment */}
+      <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-3.5 shadow-sm">
+        <span className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+          <School className="h-4 w-4 text-indigo-500" /> Classroom
+        </span>
+        {canEdit ? (
+          <>
+            <select
+              value={student.classroomId ?? ""}
+              onChange={(e) => assignClassroom(e.target.value)}
+              disabled={savingRoom}
+              className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm disabled:opacity-50"
+            >
+              <option value="">Unassigned</option>
+              {classrooms.map((c) => (
+                <option key={c.classroomId} value={c.classroomId}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            {savingRoom && <span className="text-xs text-slate-400">saving…</span>}
+            {classrooms.length === 0 && (
+              <Link href="/admin/classrooms" className="text-xs text-indigo-600 hover:underline">
+                Create a classroom first
+              </Link>
+            )}
+          </>
+        ) : student.classroomId ? (
+          <Link
+            href={`/admin/classrooms/${student.classroomId}`}
+            className="rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-100"
+          >
+            {student.classroomName}
+          </Link>
+        ) : (
+          <span className="text-sm text-slate-400">Unassigned</span>
+        )}
+      </div>
 
       <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-7 shadow-sm">
         <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500">

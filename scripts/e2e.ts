@@ -379,8 +379,29 @@ async function main() {
   const removed = (await admin.get("/api/admin/students")).json.students.find((s: any) => s.studentId === newKidId);
   check(!!removed && !removed.classroomId, "removed student is preserved but unassigned");
 
+  // Student-side assignment: assign, move between classes, then clear — all
+  // from the student's own record.
+  const roomB = await admin.post("/api/admin/classrooms", { name: "E2E Room 8B", grade: 8 });
+  const roomBId = roomB.json?.classroom?.classroomId;
+  const target = pickIds[0];
+  const toA = await admin.req("PATCH", `/api/admin/students/${target}`, { classroomId: roomId });
+  check(toA.status === 200 && toA.json.classroomId === roomId, "admin assigns a student to a class from their profile");
+  const moved = await admin.req("PATCH", `/api/admin/students/${target}`, { classroomId: roomBId });
+  check(moved.status === 200 && moved.json.classroomId === roomBId, "admin moves the student to another class");
+  const inB = (await admin.get(`/api/admin/classrooms/${roomBId}`)).json;
+  check(
+    inB.students.some((s: any) => s.studentId === target) &&
+      !(await admin.get(`/api/admin/classrooms/${roomId}`)).json.students.some((s: any) => s.studentId === target),
+    "the move leaves the old class and joins the new one"
+  );
+  const badRoom = await admin.req("PATCH", `/api/admin/students/${target}`, { classroomId: "does-not-exist" });
+  check(badRoom.status === 404, "assigning to a missing class is rejected (404)");
+  const cleared = await admin.req("PATCH", `/api/admin/students/${target}`, { classroomId: null });
+  check(cleared.status === 200 && cleared.json.classroomId === null, "admin clears the student's class from their profile");
+
   const delRoom = await admin.del(`/api/admin/classrooms/${roomId}`);
   check(delRoom.status === 200, "admin deletes the classroom");
+  await admin.del(`/api/admin/classrooms/${roomBId}`); // cleanup
   const survivor = (await admin.get("/api/admin/students")).json.students.find((s: any) => s.studentId === pickIds[0]);
   check(!!survivor && !survivor.classroomId, "students survive classroom deletion (unassigned)");
 
@@ -445,6 +466,8 @@ async function main() {
   check(vRoomsRead.status === 200, "viewer can view classrooms (read allowed)");
   const vRoomCreate = await viewer.post("/api/admin/classrooms", { name: "nope" });
   check(vRoomCreate.status === 403, "viewer cannot create classrooms (403)");
+  const vAssign = await viewer.req("PATCH", `/api/admin/students/${pickIds[0]}`, { classroomId: null });
+  check(vAssign.status === 403, "viewer cannot change a student's classroom (403)");
 
   // ── Summary ────────────────────────────────────────────────────────────────
   console.log("\n" + "─".repeat(60));
