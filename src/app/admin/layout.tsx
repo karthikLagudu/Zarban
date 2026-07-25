@@ -6,12 +6,16 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  Boxes,
+  ArrowUpRight,
   ChartLine,
+  FileSpreadsheet,
   GraduationCap,
   LayoutDashboard,
+  LayoutGrid,
   Library,
+  LibraryBig,
   LogOut,
+  Network,
   Settings,
   ShieldAlert,
   UserCog,
@@ -19,15 +23,61 @@ import {
 } from "lucide-react";
 import { AdminContext, type AdminUser } from "./admin-context";
 
-const NAV = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { href: "/admin/students", label: "Students", icon: Users },
-  { href: "/admin/analytics", label: "Cohort Analytics", icon: ChartLine },
-  { href: "/admin/questions", label: "Question Bank", icon: Library },
-  { href: "/admin/settings", label: "Settings", icon: Settings },
-  { href: "/admin/users", label: "User Access", icon: UserCog, adminOnly: true },
-  { href: "/admin/system", label: "System & Audit", icon: ShieldAlert, adminOnly: true },
+type Access = "any" | "admin" | "content"; // content = Admin or Editor
+
+interface NavItem {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  exact?: boolean;
+  external?: boolean; // leaves the admin console (into the Content Studio)
+}
+
+interface NavGroup {
+  label: string;
+  access: Access;
+  items: NavItem[];
+}
+
+// One console that reaches every surface. Admin sees all three groups; Teacher
+// and Viewer see Analytics; Editor additionally sees Content Studio.
+const NAV_GROUPS: NavGroup[] = [
+  {
+    label: "Analytics",
+    access: "any",
+    items: [
+      { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+      { href: "/admin/students", label: "Students", icon: Users },
+      { href: "/admin/analytics", label: "Cohort Analytics", icon: ChartLine },
+      { href: "/admin/questions", label: "Question Bank", icon: Library },
+    ],
+  },
+  {
+    label: "Administration",
+    access: "admin",
+    items: [
+      { href: "/admin/settings", label: "Settings", icon: Settings },
+      { href: "/admin/users", label: "User Access", icon: UserCog },
+      { href: "/admin/system", label: "System & Audit", icon: ShieldAlert },
+    ],
+  },
+  {
+    label: "Content Studio",
+    access: "content",
+    items: [
+      { href: "/content", label: "Overview", icon: LayoutGrid, external: true },
+      { href: "/content/skills", label: "Skills & Graph", icon: Network, external: true },
+      { href: "/content/questions", label: "Questions", icon: LibraryBig, external: true },
+      { href: "/content/import", label: "Import / Export", icon: FileSpreadsheet, external: true },
+    ],
+  },
 ];
+
+function canSee(access: Access, role: string): boolean {
+  if (access === "any") return true;
+  if (access === "admin") return role === "Admin";
+  return role === "Admin" || role === "Editor"; // content
+}
 
 const ROLE_BADGE: Record<string, string> = {
   Admin: "bg-indigo-100 text-indigo-700",
@@ -100,36 +150,44 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
 
-          {/* Nav */}
-          <nav className="flex flex-1 flex-col gap-1 p-3">
-            {NAV.filter((item) => !item.adminOnly || user.role === "Admin").map((item) => {
-              const active = item.exact
-                ? pathname === item.href
-                : pathname.startsWith(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`group relative flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition ${
-                    active
-                      ? "bg-gradient-to-r from-indigo-50 to-violet-50 text-indigo-700"
-                      : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
-                  }`}
-                >
-                  {active && (
-                    <span className="absolute top-1/2 left-0 h-6 w-1 -translate-y-1/2 rounded-r-full bg-gradient-to-b from-indigo-500 to-violet-600" />
-                  )}
-                  <item.icon
-                    className={`h-[18px] w-[18px] transition ${
-                      active
-                        ? "text-indigo-600"
-                        : "text-slate-400 group-hover:text-slate-600"
-                    }`}
-                  />
-                  {item.label}
-                </Link>
-              );
-            })}
+          {/* Nav — grouped so an Admin reaches every surface from one console */}
+          <nav className="flex flex-1 flex-col gap-5 overflow-y-auto p-3">
+            {NAV_GROUPS.filter((g) => canSee(g.access, user.role)).map((group) => (
+              <div key={group.label} className="flex flex-col gap-1">
+                <p className="px-3.5 pb-1 text-[10px] font-bold tracking-widest text-slate-300 uppercase">
+                  {group.label}
+                </p>
+                {group.items.map((item) => {
+                  const active =
+                    !item.external &&
+                    (item.exact ? pathname === item.href : pathname.startsWith(item.href));
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`group relative flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition ${
+                        active
+                          ? "bg-gradient-to-r from-indigo-50 to-violet-50 text-indigo-700"
+                          : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+                      }`}
+                    >
+                      {active && (
+                        <span className="absolute top-1/2 left-0 h-6 w-1 -translate-y-1/2 rounded-r-full bg-gradient-to-b from-indigo-500 to-violet-600" />
+                      )}
+                      <item.icon
+                        className={`h-[18px] w-[18px] transition ${
+                          active ? "text-indigo-600" : "text-slate-400 group-hover:text-slate-600"
+                        }`}
+                      />
+                      <span className="flex-1">{item.label}</span>
+                      {item.external && (
+                        <ArrowUpRight className="h-3.5 w-3.5 text-slate-300 transition group-hover:text-slate-500" />
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            ))}
           </nav>
 
           {/* User */}
@@ -149,14 +207,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </span>
               </div>
             </div>
-            {(user.role === "Admin" || user.role === "Editor") && (
-              <a
-                href="/content"
-                className="mt-2 flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-50 to-teal-50 px-3 py-2 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-100 transition hover:from-emerald-100 hover:to-teal-100"
-              >
-                <Boxes className="h-3.5 w-3.5" /> Open Content Studio
-              </a>
-            )}
             <div className="mt-2 flex items-center justify-between px-1">
               <a
                 href="/"
