@@ -78,13 +78,23 @@ CREATE TABLE "question_dimensions" (
     CONSTRAINT "question_dimensions_question_id_fkey" FOREIGN KEY ("question_id") REFERENCES "questions" ("question_id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+CREATE TABLE "classrooms" (
+    "classroom_id" TEXT NOT NULL PRIMARY KEY,
+    "name" TEXT NOT NULL,
+    "grade" INTEGER,
+    "section" TEXT,
+    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE "students" (
     "student_id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT,
     "email" TEXT,
     "school" TEXT,
     "class_grade" INTEGER,
-    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "classroom_id" TEXT,
+    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "students_classroom_id_fkey" FOREIGN KEY ("classroom_id") REFERENCES "classrooms" ("classroom_id") ON DELETE SET NULL ON UPDATE NO ACTION
 );
 
 CREATE TABLE "sessions" (
@@ -4140,5 +4150,6 @@ CREATE INDEX "questions_grade_level_difficulty_band_idx" ON "questions"("grade_l
 CREATE INDEX "questions_primary_skill_id_grade_level_difficulty_band_idx" ON "questions"("primary_skill_id", "grade_level", "difficulty_band");
 CREATE INDEX "responses_session_id_idx" ON "responses"("session_id");
 CREATE INDEX "sessions_student_id_idx" ON "sessions"("student_id");
+CREATE INDEX "students_classroom_id_idx" ON "students"("classroom_id");
 CREATE UNIQUE INDEX "students_email_key" ON "students"("email");
 CREATE INDEX "traversal_events_session_id_idx" ON "traversal_events"("session_id");

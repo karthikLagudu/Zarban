@@ -16,6 +16,7 @@ import {
   LibraryBig,
   LogOut,
   Network,
+  School,
   Settings,
   ShieldAlert,
   UserCog,
@@ -48,6 +49,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
       { href: "/admin/students", label: "Students", icon: Users },
+      { href: "/admin/classrooms", label: "Classrooms", icon: School },
       { href: "/admin/analytics", label: "Cohort Analytics", icon: ChartLine },
       { href: "/admin/questions", label: "Question Bank", icon: Library },
     ],

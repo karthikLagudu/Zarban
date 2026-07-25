@@ -135,18 +135,34 @@ model QuestionDimension {
   @@map("question_dimensions")
 }
 
+// ── Classrooms (admin-managed rosters) ──────────────────────────────────────
+model Classroom {
+  classroomId String   @id @default(uuid()) @map("classroom_id")
+  name        String
+  grade       Int?
+  section     String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  students Student[]
+
+  @@map("classrooms")
+}
+
 // ── Students ────────────────────────────────────────────────────────────────
 model Student {
-  studentId  String   @id @default(uuid()) @map("student_id")
-  name       String?
-  email      String?  @unique
-  school     String?
-  classGrade Int?     @map("class_grade")
-  createdAt  DateTime @default(now()) @map("created_at")
+  studentId   String   @id @default(uuid()) @map("student_id")
+  name        String?
+  email       String?  @unique
+  school      String?
+  classGrade  Int?     @map("class_grade")
+  classroomId String?  @map("classroom_id")
+  createdAt   DateTime @default(now()) @map("created_at")
 
+  classroom Classroom?          @relation(fields: [classroomId], references: [classroomId], onDelete: SetNull, onUpdate: NoAction)
   sessions  AssessmentSession[]
   bktStates BktState[]
 
+  @@index([classroomId])
   @@map("students")
 }
 

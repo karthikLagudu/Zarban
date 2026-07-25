@@ -11,6 +11,8 @@ interface Row {
   name: string | null;
   school: string | null;
   classGrade: number | null;
+  classroomId: string | null;
+  classroomName: string | null;
   sessionCount: number;
   lastAssessmentAt: string | null;
   lastScore: number | null;
@@ -64,7 +66,7 @@ export default function StudentsPage() {
           <thead>
             <tr className="border-b border-slate-100 bg-slate-50/60 text-xs tracking-wider text-slate-400 uppercase">
               <th className="px-5 py-3.5 font-semibold">Name</th>
-              <th className="px-5 py-3.5 font-semibold">School</th>
+              <th className="px-5 py-3.5 font-semibold">Classroom</th>
               <th className="px-5 py-3.5 font-semibold">Grade</th>
               <th className="px-5 py-3.5 font-semibold">Assessments</th>
               <th className="px-5 py-3.5 font-semibold">Last assessment</th>
@@ -112,7 +114,18 @@ export default function StudentsPage() {
                       </span>
                     </Link>
                   </td>
-                  <td className="px-5 py-3 text-slate-500">{r.school ?? "—"}</td>
+                  <td className="px-5 py-3">
+                    {r.classroomId ? (
+                      <Link
+                        href={`/admin/classrooms/${r.classroomId}`}
+                        className="rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-100 transition hover:bg-indigo-100"
+                      >
+                        {r.classroomName}
+                      </Link>
+                    ) : (
+                      <span className="text-slate-300">—</span>
+                    )}
+                  </td>
                   <td className="px-5 py-3 font-medium tabular-nums">
                     {r.classGrade ?? "—"}
                   </td>

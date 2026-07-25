@@ -19,6 +19,7 @@ SCHEMA_ORDER = [
     "q_matrix",
     "answer_traps",
     "question_dimensions",
+    "classrooms",
     "students",
     "sessions",
     "responses",

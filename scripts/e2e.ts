@@ -328,6 +328,62 @@ async function main() {
   check(getTimer.json.settings?.test_timer_minutes === "20", "time-limit setting persists");
   await admin.put("/api/admin/settings", { test_timer_minutes: "0" }); // restore no-limit
 
+  section("4c · Classrooms — create + roster management");
+  const roomsBefore = await admin.get("/api/admin/classrooms");
+  check(
+    roomsBefore.status === 200 && Array.isArray(roomsBefore.json.classrooms),
+    "classroom list loads"
+  );
+  const mkRoom = await admin.post("/api/admin/classrooms", { name: "E2E Room 7A", grade: 7, section: "A" });
+  check(mkRoom.status === 201 && !!mkRoom.json.classroom?.classroomId, "admin creates a classroom");
+  const roomId = mkRoom.json?.classroom?.classroomId;
+
+  const allStudents = (await admin.get("/api/admin/students")).json.students ?? [];
+  const pickIds = allStudents.slice(0, 2).map((s: any) => s.studentId);
+  const assign = await admin.post(`/api/admin/classrooms/${roomId}/students`, { studentIds: pickIds });
+  check(
+    assign.status === 200 && assign.json.added === pickIds.length,
+    `admin assigns ${pickIds.length} existing students`
+  );
+
+  const addNew = await admin.post(`/api/admin/classrooms/${roomId}/students`, { name: "E2E Roster Kid", grade: 7 });
+  check(addNew.status === 201 && addNew.json.added === 1, "admin adds a brand-new roster student");
+  const newKidId = addNew.json?.studentId;
+
+  const detail = await admin.get(`/api/admin/classrooms/${roomId}`);
+  check(
+    detail.status === 200 && detail.json.stats?.studentCount === pickIds.length + 1,
+    `roster holds ${pickIds.length + 1} students`
+  );
+  check(
+    detail.json.students.some((s: any) => s.studentId === newKidId),
+    "the new student appears in the roster"
+  );
+
+  const listWithRoom = await admin.get("/api/admin/students");
+  check(
+    listWithRoom.json.students.some((s: any) => s.classroomName === "E2E Room 7A"),
+    "students list shows classroom membership"
+  );
+
+  const rename = await admin.req("PATCH", `/api/admin/classrooms/${roomId}`, { name: "E2E Room 7A (renamed)" });
+  check(
+    rename.status === 200 && rename.json.classroom?.name === "E2E Room 7A (renamed)",
+    "admin renames a classroom"
+  );
+
+  const removeOne = await admin.del(`/api/admin/classrooms/${roomId}/students/${newKidId}`);
+  check(removeOne.status === 200, "admin removes a student from the classroom");
+  const detail2 = await admin.get(`/api/admin/classrooms/${roomId}`);
+  check(detail2.json.stats?.studentCount === pickIds.length, "roster shrinks after removal");
+  const removed = (await admin.get("/api/admin/students")).json.students.find((s: any) => s.studentId === newKidId);
+  check(!!removed && !removed.classroomId, "removed student is preserved but unassigned");
+
+  const delRoom = await admin.del(`/api/admin/classrooms/${roomId}`);
+  check(delRoom.status === 200, "admin deletes the classroom");
+  const survivor = (await admin.get("/api/admin/students")).json.students.find((s: any) => s.studentId === pickIds[0]);
+  check(!!survivor && !survivor.classroomId, "students survive classroom deletion (unassigned)");
+
   section("5 · Content portal (Editor RBAC)");
   const editor = new Client();
   const eLogin = await editor.post("/api/admin/auth/login", { email: "editor@zarban.local", password: "editor123" });
@@ -385,6 +441,10 @@ async function main() {
   check(vAudit.status === 403, "viewer cannot read the audit log (403)");
   const vCreateUser = await viewer.post("/api/admin/users", { email: "x@y.z", role: "Admin", password: "abcdef" });
   check(vCreateUser.status === 403, "viewer cannot create admin accounts (403)");
+  const vRoomsRead = await viewer.get("/api/admin/classrooms");
+  check(vRoomsRead.status === 200, "viewer can view classrooms (read allowed)");
+  const vRoomCreate = await viewer.post("/api/admin/classrooms", { name: "nope" });
+  check(vRoomCreate.status === 403, "viewer cannot create classrooms (403)");
 
   // ── Summary ────────────────────────────────────────────────────────────────
   console.log("\n" + "─".repeat(60));

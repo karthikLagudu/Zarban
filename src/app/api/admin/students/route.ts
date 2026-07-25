@@ -10,6 +10,7 @@ export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q")?.trim().toLowerCase() ?? "";
   const students = await prisma.student.findMany({
     include: {
+      classroom: { select: { classroomId: true, name: true } },
       sessions: {
         orderBy: { startedAt: "desc" },
         include: { responses: { select: { isCorrect: true } } },
@@ -42,6 +43,8 @@ export async function GET(req: NextRequest) {
         name: st.name,
         school: st.school,
         classGrade: st.classGrade,
+        classroomId: st.classroomId,
+        classroomName: st.classroom?.name ?? null,
         sessionCount: st.sessions.length,
         lastAssessmentAt: last?.startedAt.toISOString() ?? null,
         lastScore,

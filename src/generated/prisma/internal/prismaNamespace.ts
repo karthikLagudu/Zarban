@@ -396,6 +396,7 @@ export const ModelName = {
   QMatrixEntry: 'QMatrixEntry',
   AnswerTrap: 'AnswerTrap',
   QuestionDimension: 'QuestionDimension',
+  Classroom: 'Classroom',
   Student: 'Student',
   AssessmentSession: 'AssessmentSession',
   Response: 'Response',
@@ -421,7 +422,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "skill" | "knowledgeGraphEdge" | "question" | "qMatrixEntry" | "answerTrap" | "questionDimension" | "student" | "assessmentSession" | "response" | "bktState" | "dimensionScore" | "traversalEvent" | "reviewFlag" | "setting" | "adminUser" | "adminAuditLog"
+    modelProps: "skill" | "knowledgeGraphEdge" | "question" | "qMatrixEntry" | "answerTrap" | "questionDimension" | "classroom" | "student" | "assessmentSession" | "response" | "bktState" | "dimensionScore" | "traversalEvent" | "reviewFlag" | "setting" | "adminUser" | "adminAuditLog"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -866,6 +867,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.QuestionDimensionCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.QuestionDimensionCountAggregateOutputType> | number
+        }
+      }
+    }
+    Classroom: {
+      payload: Prisma.$ClassroomPayload<ExtArgs>
+      fields: Prisma.ClassroomFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ClassroomFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClassroomPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ClassroomFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClassroomPayload>
+        }
+        findFirst: {
+          args: Prisma.ClassroomFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClassroomPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ClassroomFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClassroomPayload>
+        }
+        findMany: {
+          args: Prisma.ClassroomFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClassroomPayload>[]
+        }
+        create: {
+          args: Prisma.ClassroomCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClassroomPayload>
+        }
+        createMany: {
+          args: Prisma.ClassroomCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ClassroomCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClassroomPayload>[]
+        }
+        delete: {
+          args: Prisma.ClassroomDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClassroomPayload>
+        }
+        update: {
+          args: Prisma.ClassroomUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClassroomPayload>
+        }
+        deleteMany: {
+          args: Prisma.ClassroomDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ClassroomUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ClassroomUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClassroomPayload>[]
+        }
+        upsert: {
+          args: Prisma.ClassroomUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClassroomPayload>
+        }
+        aggregate: {
+          args: Prisma.ClassroomAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateClassroom>
+        }
+        groupBy: {
+          args: Prisma.ClassroomGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ClassroomGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ClassroomCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ClassroomCountAggregateOutputType> | number
         }
       }
     }
@@ -1728,12 +1803,24 @@ export const QuestionDimensionScalarFieldEnum = {
 export type QuestionDimensionScalarFieldEnum = (typeof QuestionDimensionScalarFieldEnum)[keyof typeof QuestionDimensionScalarFieldEnum]
 
 
+export const ClassroomScalarFieldEnum = {
+  classroomId: 'classroomId',
+  name: 'name',
+  grade: 'grade',
+  section: 'section',
+  createdAt: 'createdAt'
+} as const
+
+export type ClassroomScalarFieldEnum = (typeof ClassroomScalarFieldEnum)[keyof typeof ClassroomScalarFieldEnum]
+
+
 export const StudentScalarFieldEnum = {
   studentId: 'studentId',
   name: 'name',
   email: 'email',
   school: 'school',
   classGrade: 'classGrade',
+  classroomId: 'classroomId',
   createdAt: 'createdAt'
 } as const
 
@@ -2020,6 +2107,7 @@ export type GlobalOmitConfig = {
   qMatrixEntry?: Prisma.QMatrixEntryOmit
   answerTrap?: Prisma.AnswerTrapOmit
   questionDimension?: Prisma.QuestionDimensionOmit
+  classroom?: Prisma.ClassroomOmit
   student?: Prisma.StudentOmit
   assessmentSession?: Prisma.AssessmentSessionOmit
   response?: Prisma.ResponseOmit
