@@ -264,6 +264,70 @@ async function main() {
   const adminQ = await admin.get("/api/admin/questions?page=1&page_size=5");
   check(adminQ.status === 200 && adminQ.json.total > 0, `question bank (${adminQ.json?.total} questions)`);
 
+  section("4b · Admin Control Center — users, maintenance, audit");
+  const usersList = await admin.get("/api/admin/users");
+  check(
+    usersList.status === 200 && Array.isArray(usersList.json.users),
+    `user list (${usersList.json?.users?.length} accounts)`
+  );
+  const testEmail = "e2e.staff@zarban.local";
+  const leftover = usersList.json.users?.find((u: any) => u.email === testEmail);
+  if (leftover) await admin.del(`/api/admin/users/${leftover.id}`);
+
+  const created = await admin.post("/api/admin/users", {
+    email: testEmail, name: "E2E Staff", role: "Viewer", password: "temp123",
+  });
+  check(created.status === 201 && created.json.user?.role === "Viewer", "admin creates a staff account");
+  const newId = created.json?.user?.id;
+
+  const dup = await admin.post("/api/admin/users", { email: testEmail, role: "Viewer", password: "temp123" });
+  check(dup.status === 409, "duplicate email is rejected (409)");
+  const weak = await admin.post("/api/admin/users", { email: "e2e.weak@zarban.local", role: "Viewer", password: "12" });
+  check(weak.status === 400, "weak password is rejected (400)");
+
+  const roleChange = await admin.req("PATCH", `/api/admin/users/${newId}`, { role: "Teacher" });
+  check(roleChange.status === 200 && roleChange.json.user?.role === "Teacher", "admin changes a user's role");
+
+  const pwReset = await admin.req("PATCH", `/api/admin/users/${newId}`, { password: "newpass123" });
+  check(pwReset.status === 200, "admin resets a user's password");
+  const reLogin = await new Client().post("/api/admin/auth/login", { email: testEmail, password: "newpass123" });
+  check(reLogin.status === 200, "user can sign in with the reset password");
+
+  const adminRow = usersList.json.users.find((u: any) => u.email === "admin@zarban.local");
+  const selfDel = await admin.del(`/api/admin/users/${adminRow.id}`);
+  check(selfDel.status === 400, "admin cannot delete their own account (400)");
+  const demote = await admin.req("PATCH", `/api/admin/users/${adminRow.id}`, { role: "Viewer" });
+  check(demote.status === 400, "the only Admin cannot be demoted (400)");
+
+  const del = await admin.del(`/api/admin/users/${newId}`);
+  check(del.status === 200, "admin deletes the staff account");
+
+  const maint = await admin.get("/api/admin/maintenance");
+  check(maint.status === 200 && typeof maint.json.counts?.students === "number", "maintenance counts load");
+  const badConfirm = await admin.post("/api/admin/maintenance", { action: "clear_incomplete_sessions", confirm: "nope" });
+  check(badConfirm.status === 400, "maintenance requires the confirmation phrase (400)");
+  const clear = await admin.post("/api/admin/maintenance", { action: "clear_incomplete_sessions", confirm: "CLEAR" });
+  check(clear.status === 200, "admin clears incomplete sessions");
+
+  const auditRes = await admin.get("/api/admin/audit");
+  check(
+    auditRes.status === 200 && Array.isArray(auditRes.json.entries) && auditRes.json.entries.length > 0,
+    `audit log populated (${auditRes.json?.entries?.length} entries)`
+  );
+  check(
+    auditRes.json.entries.some((e: any) => e.action === "user.create"),
+    "audit log records account creation"
+  );
+
+  const setTimer = await admin.put("/api/admin/settings", { test_timer_minutes: "20" });
+  check(
+    setTimer.status === 200 && setTimer.json.updated?.test_timer_minutes === "20",
+    "admin saves the time-limit setting"
+  );
+  const getTimer = await admin.get("/api/admin/settings");
+  check(getTimer.json.settings?.test_timer_minutes === "20", "time-limit setting persists");
+  await admin.put("/api/admin/settings", { test_timer_minutes: "0" }); // restore no-limit
+
   section("5 · Content portal (Editor RBAC)");
   const editor = new Client();
   const eLogin = await editor.post("/api/admin/auth/login", { email: "editor@zarban.local", password: "editor123" });
@@ -313,6 +377,14 @@ async function main() {
   check(vContent.status === 403, "viewer is denied content authoring (403)");
   const vSkillCreate = await viewer.post("/api/content/skills", { skillId: "S_901", skillName: "nope" });
   check(vSkillCreate.status === 403, "viewer cannot create content (403)");
+  const vUsers = await viewer.get("/api/admin/users");
+  check(vUsers.status === 403, "viewer cannot manage staff accounts (403)");
+  const vMaint = await viewer.get("/api/admin/maintenance");
+  check(vMaint.status === 403, "viewer cannot access data maintenance (403)");
+  const vAudit = await viewer.get("/api/admin/audit");
+  check(vAudit.status === 403, "viewer cannot read the audit log (403)");
+  const vCreateUser = await viewer.post("/api/admin/users", { email: "x@y.z", role: "Admin", password: "abcdef" });
+  check(vCreateUser.status === 403, "viewer cannot create admin accounts (403)");
 
   // ── Summary ────────────────────────────────────────────────────────────────
   console.log("\n" + "─".repeat(60));

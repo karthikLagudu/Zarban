@@ -63,7 +63,8 @@ export const ModelName = {
   TraversalEvent: 'TraversalEvent',
   ReviewFlag: 'ReviewFlag',
   Setting: 'Setting',
-  AdminUser: 'AdminUser'
+  AdminUser: 'AdminUser',
+  AdminAuditLog: 'AdminAuditLog'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -290,6 +291,19 @@ export const AdminUserScalarFieldEnum = {
 } as const
 
 export type AdminUserScalarFieldEnum = (typeof AdminUserScalarFieldEnum)[keyof typeof AdminUserScalarFieldEnum]
+
+
+export const AdminAuditLogScalarFieldEnum = {
+  id: 'id',
+  actorId: 'actorId',
+  actorEmail: 'actorEmail',
+  action: 'action',
+  target: 'target',
+  detail: 'detail',
+  createdAt: 'createdAt'
+} as const
+
+export type AdminAuditLogScalarFieldEnum = (typeof AdminAuditLogScalarFieldEnum)[keyof typeof AdminAuditLogScalarFieldEnum]
 
 
 export const SortOrder = {

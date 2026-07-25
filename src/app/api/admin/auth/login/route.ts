@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { createSessionToken, sessionCookie, type Role } from "@/lib/auth";
+import { logAudit } from "@/lib/audit";
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,6 +26,12 @@ export async function POST(req: NextRequest) {
       name: user.name,
       role: user.role as Role,
     });
+    await logAudit(
+      { userId: user.id, email: user.email, name: user.name, role: user.role as Role },
+      "auth.login",
+      null,
+      `Signed in as ${user.role}`
+    );
     const res = NextResponse.json({
       user: { email: user.email, name: user.name, role: user.role },
     });

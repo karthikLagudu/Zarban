@@ -190,6 +190,16 @@ CREATE TABLE "admin_users" (
     "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE "admin_audit_log" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "actor_id" INTEGER,
+    "actor_email" TEXT NOT NULL,
+    "action" TEXT NOT NULL,
+    "target" TEXT,
+    "detail" TEXT,
+    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 INSERT INTO "skills" ("skill_id", "skill_name", "grade_level", "topic_area", "difficulty_band", "prerequisite_skill_ids", "notes") VALUES ('S_001', 'Whole Numbers & Place Value', '5', 'Arithmetic', 'easy', NULL, 'NCERT topic: large_numbers_place_value (Class 5 Ch 1)');
 INSERT INTO "skills" ("skill_id", "skill_name", "grade_level", "topic_area", "difficulty_band", "prerequisite_skill_ids", "notes") VALUES ('S_002', 'Basic Operations', '5', 'Arithmetic', 'easy', NULL, 'NCERT topic: four_operations (Class 5 Ch 2)');
 INSERT INTO "skills" ("skill_id", "skill_name", "grade_level", "topic_area", "difficulty_band", "prerequisite_skill_ids", "notes") VALUES ('S_003', 'Factors & Multiples', '5', 'Arithmetic', 'easy', 'S_002', 'NCERT topic: factors_multiples (Class 5 Ch 6)');
@@ -4114,12 +4124,14 @@ INSERT INTO "question_dimensions" ("question_id", "dim_reading", "dim_understand
 INSERT INTO "question_dimensions" ("question_id", "dim_reading", "dim_understanding", "dim_application", "dim_calculation", "dim_retention", "primary_dimension", "word_eq_pair_id") VALUES ('ncrt_9_statistics_0013', 0, 1, 1, 0, 0, 'Understanding', NULL);
 
 INSERT INTO "settings" ("key", "value") VALUES ('max_questions', '30');
+INSERT INTO "settings" ("key", "value") VALUES ('test_timer_minutes', '0');
 
 INSERT INTO "admin_users" ("id", "email", "name", "password_hash", "role", "created_at") VALUES (1, 'admin@zarban.local', 'Admin', '$2b$10$sZpNrsL0qucSQez1wt0ix.bJpDJO/s9YQKklOGaE1zugPGcz.MUsi', 'Admin', 1784272055022);
 INSERT INTO "admin_users" ("id", "email", "name", "password_hash", "role", "created_at") VALUES (2, 'teacher@zarban.local', 'Teacher', '$2b$10$1WeHlRmVSLhekSCyZ0nZEeeRJ7jOUwOoODB7PJlyp/TyEmZtkMOE2', 'Teacher', 1784272055297);
 INSERT INTO "admin_users" ("id", "email", "name", "password_hash", "role", "created_at") VALUES (3, 'viewer@zarban.local', 'Viewer', '$2b$10$gvlUu/FF3NEAsV./eogywejkFnu.vU3IKq5g1J38Wdt33M7T7Fxqe', 'Viewer', 1784272055521);
 INSERT INTO "admin_users" ("id", "email", "name", "password_hash", "role", "created_at") VALUES (10, 'editor@zarban.local', 'Content Editor', '$2b$10$YYrMxkhuvgNSjgVE7T5pL.F6daoZ.xZp6B/S.gXPUMyPaWApcdXLq', 'Editor', '2026-07-23T06:48:58.365Z');
 
+CREATE INDEX "admin_audit_log_created_at_idx" ON "admin_audit_log"("created_at");
 CREATE UNIQUE INDEX "admin_users_email_key" ON "admin_users"("email");
 CREATE UNIQUE INDEX "answer_traps_question_id_option_label_key" ON "answer_traps"("question_id", "option_label");
 CREATE INDEX "knowledge_graph_parent_skill_id_idx" ON "knowledge_graph"("parent_skill_id");

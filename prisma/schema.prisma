@@ -286,14 +286,31 @@ model Setting {
   @@map("settings")
 }
 
-// ── Admin users (RBAC: Admin | Teacher | Viewer) ────────────────────────────
+// ── Admin users (RBAC: Admin | Teacher | Viewer | Editor) ───────────────────
 model AdminUser {
   id           Int      @id @default(autoincrement())
   email        String   @unique
   name         String?
   passwordHash String   @map("password_hash")
-  role         String   @default("Viewer") // Admin | Teacher | Viewer
+  role         String   @default("Viewer") // Admin | Teacher | Viewer | Editor
   createdAt    DateTime @default(now()) @map("created_at")
 
   @@map("admin_users")
+}
+
+// ── Audit log (privileged admin actions) ────────────────────────────────────
+// An append-only trail of who did what: sign-ins, account changes, settings
+// edits, and destructive data-maintenance actions. Powers accountability in the
+// Admin Control Center.
+model AdminAuditLog {
+  id         Int      @id @default(autoincrement())
+  actorId    Int?     @map("actor_id") // AdminUser.id (null if the actor was removed)
+  actorEmail String   @map("actor_email")
+  action     String // e.g. user.create | user.role_change | data.reset | settings.update
+  target     String? // the object acted upon (email, setting key, "all learner history")
+  detail     String? // human-readable summary of the change
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@map("admin_audit_log")
 }

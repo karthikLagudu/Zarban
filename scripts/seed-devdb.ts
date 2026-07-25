@@ -125,7 +125,10 @@ try {
         .run(email, name, role, hash, new Date().toISOString());
     }
   }
-  for (const [key, value] of [["max_questions", "30"]] as [string, string][]) {
+  for (const [key, value] of [
+    ["max_questions", "30"],
+    ["test_timer_minutes", "0"],
+  ] as [string, string][]) {
     const ex = db.prepare("SELECT key FROM settings WHERE key = ?").get(key);
     if (!ex) db.prepare("INSERT INTO settings (key, value) VALUES (?, ?)").run(key, value);
   }

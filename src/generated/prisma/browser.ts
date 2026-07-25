@@ -92,3 +92,8 @@ export type Setting = Prisma.SettingModel
  * 
  */
 export type AdminUser = Prisma.AdminUserModel
+/**
+ * Model AdminAuditLog
+ * 
+ */
+export type AdminAuditLog = Prisma.AdminAuditLogModel

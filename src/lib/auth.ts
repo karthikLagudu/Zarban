@@ -12,6 +12,9 @@ import { NextResponse } from "next/server";
 
 export type Role = "Admin" | "Teacher" | "Viewer" | "Editor";
 
+/** Every assignable role, for account-management validation. */
+export const VALID_ROLES: Role[] = ["Admin", "Teacher", "Viewer", "Editor"];
+
 /** Roles allowed to author learning content. */
 export const CONTENT_ROLES: Role[] = ["Admin", "Editor"];
 

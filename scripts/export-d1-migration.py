@@ -28,6 +28,7 @@ SCHEMA_ORDER = [
     "review_flags",
     "settings",
     "admin_users",
+    "admin_audit_log",
 ]
 
 SEED_ORDER = [

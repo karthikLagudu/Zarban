@@ -13,6 +13,8 @@ import {
   Library,
   LogOut,
   Settings,
+  ShieldAlert,
+  UserCog,
   Users,
 } from "lucide-react";
 import { AdminContext, type AdminUser } from "./admin-context";
@@ -23,12 +25,15 @@ const NAV = [
   { href: "/admin/analytics", label: "Cohort Analytics", icon: ChartLine },
   { href: "/admin/questions", label: "Question Bank", icon: Library },
   { href: "/admin/settings", label: "Settings", icon: Settings },
+  { href: "/admin/users", label: "User Access", icon: UserCog, adminOnly: true },
+  { href: "/admin/system", label: "System & Audit", icon: ShieldAlert, adminOnly: true },
 ];
 
 const ROLE_BADGE: Record<string, string> = {
   Admin: "bg-indigo-100 text-indigo-700",
   Teacher: "bg-emerald-100 text-emerald-700",
   Viewer: "bg-slate-200 text-slate-600",
+  Editor: "bg-amber-100 text-amber-700",
 };
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -97,7 +102,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           {/* Nav */}
           <nav className="flex flex-1 flex-col gap-1 p-3">
-            {NAV.map((item) => {
+            {NAV.filter((item) => !item.adminOnly || user.role === "Admin").map((item) => {
               const active = item.exact
                 ? pathname === item.href
                 : pathname.startsWith(item.href);
