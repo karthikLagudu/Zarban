@@ -12,14 +12,17 @@ import {
   BookOpen,
   BrainCircuit,
   Check,
+  Dice5,
   FileDown,
   GitBranch,
+  Gauge,
   ListChecks,
   Microscope,
   Printer,
   Target,
   Timer,
   X,
+  Zap,
 } from "lucide-react";
 import {
   PolarAngleAxis,
@@ -45,6 +48,8 @@ interface QuestionAnalysisRow {
   primaryDimension: string | null;
   timeMs: number | null;
   pace: "quick" | "steady" | "slow" | null;
+  rushed: boolean;
+  likelyGuess: boolean;
   trapType: string | null;
   misconception: string | null;
   misconceptionDetail: string | null;
@@ -103,6 +108,13 @@ interface Report {
     readingGapDetected: boolean;
   };
   foundationalGapChains: string[][];
+  behavior: {
+    likelyGuesses: number;
+    rushedAnswers: number;
+    rushedMistakes: number;
+    rushFloorMs: number;
+    notes: string[];
+  };
   narrative: string[];
   focusAreas: {
     skillId: string;
@@ -262,6 +274,9 @@ export default function ReportPage({
             </p>
           )}
         </section>
+
+        {/* Test-taking behaviour — flukes (lucky guesses) & rushed answers */}
+        <BehaviorSection behavior={report.behavior} />
 
         <div className="mt-6 grid gap-6 md:grid-cols-2">
           {/* Radar chart */}
@@ -559,6 +574,80 @@ export default function ReportPage({
   );
 }
 
+// ── Test-taking behaviour (flukes + rushing) ─────────────────────────────────
+
+function BehaviorSection({
+  behavior,
+}: {
+  behavior: Report["behavior"];
+}) {
+  // Nothing noteworthy — steady, considered answers. Keep the report clean.
+  if (
+    behavior.notes.length === 0 &&
+    behavior.likelyGuesses === 0 &&
+    behavior.rushedAnswers === 0
+  ) {
+    return null;
+  }
+  const seconds = Math.round(behavior.rushFloorMs / 1000);
+  return (
+    <section className="animate-fade-up delay-1 mt-6 rounded-3xl border border-amber-100 bg-amber-50/50 p-7 shadow-sm">
+      <SectionTitle icon={Gauge} tone="amber">
+        Test-Taking Behaviour
+      </SectionTitle>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div className="flex items-center gap-3 rounded-2xl bg-white px-5 py-4 ring-1 ring-amber-100">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-100 text-violet-600">
+            <Dice5 className="h-5 w-5" />
+          </span>
+          <div>
+            <p className="text-2xl font-bold text-slate-900 tabular-nums">
+              {behavior.likelyGuesses}
+            </p>
+            <p className="text-xs font-medium text-slate-500">
+              likely lucky guess{behavior.likelyGuesses === 1 ? "" : "es"}
+              <span className="text-slate-400"> · right but very fast</span>
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 rounded-2xl bg-white px-5 py-4 ring-1 ring-amber-100">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-100 text-rose-600">
+            <Zap className="h-5 w-5" />
+          </span>
+          <div>
+            <p className="text-2xl font-bold text-slate-900 tabular-nums">
+              {behavior.rushedAnswers}
+            </p>
+            <p className="text-xs font-medium text-slate-500">
+              rushed answer{behavior.rushedAnswers === 1 ? "" : "s"}
+              <span className="text-slate-400">
+                {" "}
+                · under {seconds}s
+                {behavior.rushedMistakes > 0
+                  ? `, ${behavior.rushedMistakes} wrong`
+                  : ""}
+              </span>
+            </p>
+          </div>
+        </div>
+      </div>
+      {behavior.notes.length > 0 && (
+        <div className="mt-3 space-y-2">
+          {behavior.notes.map((note, i) => (
+            <p
+              key={i}
+              className="flex items-start gap-2.5 text-[15px] leading-relaxed text-amber-900"
+            >
+              <AlertTriangle className="mt-1 h-4 w-4 shrink-0 text-amber-500" />
+              {note}
+            </p>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 // ── Question-by-question analysis ────────────────────────────────────────────
 
 function QuestionAnalysis({ rows }: { rows: QuestionAnalysisRow[] }) {
@@ -680,6 +769,28 @@ function QuestionAnalysis({ rows }: { rows: QuestionAnalysisRow[] }) {
                 {r.primaryDimension && (
                   <span className="rounded-full bg-sky-50 px-2.5 py-1 font-semibold text-sky-700 ring-1 ring-sky-100">
                     {r.primaryDimension}
+                  </span>
+                )}
+                {r.likelyGuess && (
+                  <span
+                    className="flex items-center gap-1 rounded-full bg-violet-100 px-2.5 py-1 font-semibold text-violet-700"
+                    title="Correct, but answered too fast to have worked it out — likely a lucky guess"
+                  >
+                    <Dice5 className="h-3 w-3" />
+                    likely guess
+                  </span>
+                )}
+                {r.rushed && !r.likelyGuess && (
+                  <span
+                    className={`flex items-center gap-1 rounded-full px-2.5 py-1 font-semibold ${
+                      r.isCorrect
+                        ? "bg-slate-100 text-slate-600"
+                        : "bg-rose-100 text-rose-700"
+                    }`}
+                    title="Answered very fast — likely rushed"
+                  >
+                    <Zap className="h-3 w-3" />
+                    rushed
                   </span>
                 )}
                 {r.timeMs !== null && (

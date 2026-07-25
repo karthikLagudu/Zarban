@@ -136,6 +136,13 @@ async function runAssessment(name: string, grade: number, mode: "all_correct" | 
   check(Array.isArray(report.skillBreakdown), `[${mode}] skill breakdown present`);
   check(!!report.gradeEquivalent?.label, `[${mode}] grade equivalent present (${report.gradeEquivalent?.label})`);
   check(Array.isArray(report.narrative) && report.narrative.length > 0, `[${mode}] narrative generated`);
+  check(
+    !!report.behavior &&
+      typeof report.behavior.likelyGuesses === "number" &&
+      typeof report.behavior.rushedAnswers === "number" &&
+      Array.isArray(report.behavior.notes),
+    `[${mode}] behaviour summary present`
+  );
 
   if (mode === "all_correct" && d1) {
     check(report.totals.accuracy >= 80, `[all_correct] accuracy high (${report.totals.accuracy}%)`);
@@ -160,6 +167,46 @@ async function runAssessment(name: string, grade: number, mode: "all_correct" | 
   return { sessionId, studentName: name };
 }
 
+// ── Rushed / fluke behaviour detection ───────────────────────────────────────
+// Answer correctly but far too fast (under the 3s rush floor) so the report
+// must flag lucky guesses on medium/hard items, plus a couple of rushed wrongs.
+async function runRushedSession() {
+  const c = new Client();
+  const start = await c.post("/api/session/start", { name: "E2E Rusher", grade: 7 });
+  const sessionId: string = start.json?.session_id;
+  check(!!sessionId, "[rushed] session starts");
+  let q = start.json?.step?.question;
+  for (let i = 0; i < 40 && q; i++) {
+    const correct = correctOptionOf(q.questionId) ?? "A";
+    // Q4 and Q7 answered wrong-and-fast → rushed mistakes; the rest right-and-fast.
+    const wrong = i === 4 || i === 7;
+    const r = await c.post("/api/session/respond", {
+      session_id: sessionId,
+      question_id: q.questionId,
+      selected_option: wrong ? OTHER(correct) : correct,
+      response_time_ms: 1500,
+    });
+    if (r.status !== 200) break;
+    if (r.json.step.done) break;
+    q = r.json.step.question;
+  }
+  await c.post("/api/session/finish", { session_id: sessionId, reason: "e2e" });
+  const report = (await c.get(`/api/session/report/${sessionId}`)).json;
+  if (d1) {
+    check(report.behavior.rushedAnswers > 0, `[rushed] rushed answers detected (${report.behavior?.rushedAnswers})`);
+    check(report.behavior.likelyGuesses > 0, `[rushed] lucky guesses detected (${report.behavior?.likelyGuesses})`);
+    check(
+      report.behavior.notes.length > 0,
+      `[rushed] behaviour notes written (${report.behavior?.notes?.length})`
+    );
+    check(
+      report.questionAnalysis.some((r: any) => r.likelyGuess) &&
+        report.questionAnalysis.some((r: any) => r.rushed),
+      "[rushed] per-question likelyGuess + rushed flags set"
+    );
+  }
+}
+
 // ── Main ─────────────────────────────────────────────────────────────────────
 async function main() {
   console.log(`\x1b[1mZARBAN END-TO-END SUITE\x1b[0m  →  ${BASE}`);
@@ -180,6 +227,9 @@ async function main() {
 
   section("2 · Student lifecycle — struggling student (all wrong)");
   await runAssessment("E2E Weak", 9, "all_wrong");
+
+  section("2b · Test-taking behaviour — rushed / lucky guesses");
+  await runRushedSession();
 
   section("3 · Admin authentication & RBAC");
   const anon = new Client();

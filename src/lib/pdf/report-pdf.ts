@@ -302,6 +302,36 @@ export async function renderReportPdf(report: DiagnosticReport): Promise<Buffer>
   }
   doc.y += 6;
 
+  // ── Test-taking behaviour (flukes + rushing) ───────────────────────────────
+  const beh = report.behavior;
+  if (beh.likelyGuesses > 0 || beh.rushedAnswers > 0) {
+    sectionTitle(doc, "Test-Taking Behaviour", AMBER);
+    const seconds = Math.round(beh.rushFloorMs / 1000);
+    const summary =
+      `${beh.likelyGuesses} likely lucky guess${beh.likelyGuesses === 1 ? "" : "es"} (right but answered in under ${seconds}s on harder items)  ·  ` +
+      `${beh.rushedAnswers} rushed answer${beh.rushedAnswers === 1 ? "" : "s"} under ${seconds}s` +
+      (beh.rushedMistakes > 0 ? `, ${beh.rushedMistakes} of them wrong` : "");
+    ensure(doc, 16);
+    doc.font("Bold").fontSize(9).fillColor("#334155").text(T(summary), M, doc.y, {
+      width: CONTENT_W,
+      lineGap: 1.5,
+    });
+    doc.y += 6;
+    for (const line of beh.notes) {
+      const text = T(line);
+      const h = doc.font("Body").fontSize(9.5).heightOfString(text, { width: CONTENT_W - 16 });
+      ensure(doc, h + 8);
+      doc.circle(M + 3, doc.y + 5, 1.8).fill(AMBER);
+      doc
+        .font("Body")
+        .fontSize(9.5)
+        .fillColor("#334155")
+        .text(text, M + 14, doc.y, { width: CONTENT_W - 16, lineGap: 1.5 });
+      doc.y += 6;
+    }
+    doc.y += 10;
+  }
+
   // ── Learning dimensions ────────────────────────────────────────────────────
   sectionTitle(doc, "Five Learning Dimensions", VIOLET);
   for (const d of report.dimensionScores) {
@@ -513,10 +543,13 @@ export async function renderReportPdf(report: DiagnosticReport): Promise<Buffer>
   log.forEach((r, idx) => {
     const qText = T(r.questionText);
     const skillText = T(r.skillName ?? "—") + (r.twinProbe ? "  (twin probe)" : "");
-    // The "why it went wrong" explanation rides under the row for mistakes.
+    // A note rides under the row: why a mistake happened, or that a correct
+    // answer looked like a lucky guess.
+    const notePrefix = r.isCorrect ? "Note" : "Why";
     const whyText = !r.isCorrect
       ? T(
           [
+            r.rushed ? "Rushed (answered very fast)" : null,
             r.trapType ? r.trapType.replace(/_/g, " ") : null,
             r.misconception,
             r.misconceptionDetail,
@@ -527,11 +560,13 @@ export async function renderReportPdf(report: DiagnosticReport): Promise<Buffer>
             .filter(Boolean)
             .join(" — ")
         )
-      : "";
+      : r.likelyGuess
+        ? T("Likely lucky guess — correct, but answered very fast on a harder item")
+        : "";
     const qH = doc.font("Body").fontSize(8).heightOfString(qText, { width: cols[3].w - 10 });
     const sH = doc.font("Body").fontSize(8).heightOfString(skillText, { width: cols[1].w - 10 });
     const whyH = whyText
-      ? doc.font("Body").fontSize(7).heightOfString(`Why: ${whyText}`, {
+      ? doc.font("Body").fontSize(7).heightOfString(`${notePrefix}: ${whyText}`, {
           width: CONTENT_W - cols[0].w - 24,
         }) + 6
       : 0;
@@ -575,8 +610,8 @@ export async function renderReportPdf(report: DiagnosticReport): Promise<Buffer>
       doc
         .font("Body")
         .fontSize(7)
-        .fillColor("#b45309")
-        .text(`Why: ${whyText}`, tableX + cols[0].w + 8, whyY, {
+        .fillColor(r.isCorrect ? VIOLET : "#b45309")
+        .text(`${notePrefix}: ${whyText}`, tableX + cols[0].w + 8, whyY, {
           width: CONTENT_W - cols[0].w - 24,
           lineGap: 1,
         });

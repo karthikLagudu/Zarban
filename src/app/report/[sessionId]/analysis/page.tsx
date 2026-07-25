@@ -10,12 +10,15 @@ import {
   ArrowLeft,
   BookOpen,
   Clock,
+  Dice5,
   FileDown,
+  Gauge,
   LineChart as LineChartIcon,
   Map,
   Microscope,
   Table2,
   TriangleAlert,
+  Zap,
 } from "lucide-react";
 import {
   Bar,
@@ -44,6 +47,9 @@ interface QuestionAnalysisRow {
   grade: number | null;
   difficulty: string | null;
   timeMs: number | null;
+  pace: "quick" | "steady" | "slow" | null;
+  rushed: boolean;
+  likelyGuess: boolean;
   thetaAfter: number | null;
   pMasteryAfter: number | null;
   trapType: string | null;
@@ -74,6 +80,13 @@ interface Report {
     finalMastery: number | null;
   }[];
   topicBreakdown: { topic: string; attempts: number; correct: number; accuracy: number }[];
+  behavior: {
+    likelyGuesses: number;
+    rushedAnswers: number;
+    rushedMistakes: number;
+    rushFloorMs: number;
+    notes: string[];
+  };
 }
 
 const BAND_COLORS: Record<string, string> = {
@@ -227,9 +240,14 @@ export default function DetailedAnalysisPage({
             {rows.map((r) => (
               <div
                 key={r.order}
-                title={`Q${r.order} · ${r.skillName ?? "?"} · Grade ${r.grade ?? "?"} · ${r.difficulty ?? "?"}${r.twinProbe ? " · twin probe" : ""}`}
-                className={`flex min-w-[64px] flex-col items-center rounded-xl px-2.5 py-2 ring-1 ${BAND_COLORS[r.difficulty ?? "medium"] ?? "bg-slate-100 text-slate-700 ring-slate-200"} ${r.twinProbe ? "outline-2 outline-dashed outline-violet-400" : ""}`}
+                title={`Q${r.order} · ${r.skillName ?? "?"} · Grade ${r.grade ?? "?"} · ${r.difficulty ?? "?"}${r.twinProbe ? " · twin probe" : ""}${r.likelyGuess ? " · likely lucky guess" : r.rushed ? " · rushed" : ""}`}
+                className={`relative flex min-w-[64px] flex-col items-center rounded-xl px-2.5 py-2 ring-1 ${BAND_COLORS[r.difficulty ?? "medium"] ?? "bg-slate-100 text-slate-700 ring-slate-200"} ${r.twinProbe ? "outline-2 outline-dashed outline-violet-400" : ""}`}
               >
+                {r.likelyGuess ? (
+                  <Dice5 className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-violet-500 p-0.5 text-white shadow" />
+                ) : r.rushed ? (
+                  <Zap className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-amber-500 p-0.5 text-white shadow" />
+                ) : null}
                 <span className="text-[10px] font-bold opacity-70">Q{r.order}</span>
                 <span className="text-sm font-bold">G{r.grade ?? "?"}</span>
                 <span className={`mt-0.5 text-xs font-bold ${r.isCorrect ? "text-emerald-700" : "text-rose-700"}`}>
@@ -243,6 +261,12 @@ export default function DetailedAnalysisPage({
             <span><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm bg-amber-200" />medium</span>
             <span><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm bg-rose-200" />hard</span>
             <span className="text-violet-500">dashed outline = twin probe</span>
+            <span className="flex items-center gap-1 text-violet-600">
+              <Dice5 className="h-3.5 w-3.5" /> likely guess
+            </span>
+            <span className="flex items-center gap-1 text-amber-600">
+              <Zap className="h-3.5 w-3.5" /> rushed
+            </span>
           </div>
         </section>
 
@@ -273,6 +297,11 @@ export default function DetailedAnalysisPage({
               </BarChart>
             </ResponsiveContainer>
           </div>
+          <BehaviorCallout
+            behavior={report.behavior}
+            rushedRows={rows.filter((r) => r.rushed)}
+            guessRows={rows.filter((r) => r.likelyGuess)}
+          />
         </section>
 
         {/* Skill deep-dive */}
@@ -404,13 +433,23 @@ export default function DetailedAnalysisPage({
                         <span className="font-bold text-emerald-600">{r.correctOption ?? "—"}</span>
                       </td>
                       <td className="py-3 pr-4">
-                        {r.trapType ? (
-                          <span className="rounded-full bg-rose-50 px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-rose-700">
-                            {r.trapType.replace(/_/g, " ")}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-slate-300">—</span>
-                        )}
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {r.trapType ? (
+                            <span className="rounded-full bg-rose-50 px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-rose-700">
+                              {r.trapType.replace(/_/g, " ")}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-slate-300">—</span>
+                          )}
+                          {r.rushed && (
+                            <span
+                              className="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold whitespace-nowrap text-amber-700"
+                              title="Answered very fast — a rushed, careless slip rather than a knowledge gap"
+                            >
+                              <Zap className="h-3 w-3" /> rushed
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="py-3 text-xs text-slate-600">
                         {r.practiceNext
@@ -442,6 +481,73 @@ export default function DetailedAnalysisPage({
         </footer>
       </div>
     </main>
+  );
+}
+
+// ── Test-taking behaviour callout ────────────────────────────────────────────
+
+function BehaviorCallout({
+  behavior,
+  rushedRows,
+  guessRows,
+}: {
+  behavior: Report["behavior"];
+  rushedRows: QuestionAnalysisRow[];
+  guessRows: QuestionAnalysisRow[];
+}) {
+  if (behavior.likelyGuesses === 0 && behavior.rushedAnswers === 0) {
+    return (
+      <p className="mt-4 flex items-center gap-2 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 ring-1 ring-emerald-100">
+        <Gauge className="h-4 w-4 shrink-0 text-emerald-500" />
+        Steady, considered pacing — no rushed answers or lucky guesses detected.
+      </p>
+    );
+  }
+  const seconds = Math.round(behavior.rushFloorMs / 1000);
+  const qList = (rows: QuestionAnalysisRow[]) =>
+    rows.map((r) => `Q${r.order}`).join(", ");
+  return (
+    <div className="mt-4 rounded-2xl bg-amber-50/70 px-5 py-4 ring-1 ring-amber-100">
+      <p className="flex items-center gap-2 text-sm font-bold text-amber-800">
+        <Gauge className="h-4 w-4 text-amber-500" /> Test-taking behaviour
+      </p>
+      <div className="mt-2 grid gap-2 sm:grid-cols-2">
+        {behavior.likelyGuesses > 0 && (
+          <p className="flex items-start gap-2 text-sm text-slate-700">
+            <Dice5 className="mt-0.5 h-4 w-4 shrink-0 text-violet-500" />
+            <span>
+              <span className="font-semibold text-slate-900">
+                {behavior.likelyGuesses} likely lucky guess
+                {behavior.likelyGuesses === 1 ? "" : "es"}
+              </span>{" "}
+              — correct but answered in under {seconds}s on harder items
+              {guessRows.length > 0 ? ` (${qList(guessRows)})` : ""}.
+            </span>
+          </p>
+        )}
+        {behavior.rushedAnswers > 0 && (
+          <p className="flex items-start gap-2 text-sm text-slate-700">
+            <Zap className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+            <span>
+              <span className="font-semibold text-slate-900">
+                {behavior.rushedAnswers} rushed answer
+                {behavior.rushedAnswers === 1 ? "" : "s"}
+              </span>{" "}
+              — under {seconds}s each
+              {behavior.rushedMistakes > 0
+                ? `, ${behavior.rushedMistakes} of them wrong`
+                : ""}
+              {rushedRows.length > 0 ? ` (${qList(rushedRows)})` : ""}.
+            </span>
+          </p>
+        )}
+      </div>
+      {behavior.notes.map((note, i) => (
+        <p key={i} className="mt-2 text-sm leading-relaxed text-amber-900">
+          {note}
+        </p>
+      ))}
+    </div>
   );
 }
 

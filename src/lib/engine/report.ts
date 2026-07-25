@@ -34,6 +34,12 @@ export interface QuestionAnalysisRow {
   timeMs: number | null;
   /** how this answer's time compares with the student's own average */
   pace: "quick" | "steady" | "slow" | null;
+  /** answered so fast (under the rush floor) that genuine reading + solving is
+   *  implausible — a rushed answer. */
+  rushed: boolean;
+  /** a correct answer that looks like a lucky guess: right, rushed, and on a
+   *  question that was not easy. The mastery estimate already discounts it. */
+  likelyGuess: boolean;
   /** engine state after this answer — powers the detailed-analysis charts */
   thetaAfter: number | null;
   pMasteryAfter: number | null;
@@ -118,6 +124,16 @@ export interface DiagnosticReport {
   };
   foundationalGapChains: string[][]; // each chain: ["Grade 9 Linear Equations", ...]
   reviewFlags: { skillId: string; skillName: string }[];
+  /** Test-taking behaviour: how many answers looked like lucky guesses vs.
+   *  rushed, plus plain-English notes the report surfaces to the student. */
+  behavior: {
+    likelyGuesses: number;
+    rushedAnswers: number;
+    rushedMistakes: number;
+    /** the "too fast to have read + solved" threshold, in ms. */
+    rushFloorMs: number;
+    notes: string[];
+  };
   narrative: string[];
   focusAreas: {
     skillId: string;
@@ -127,6 +143,12 @@ export interface DiagnosticReport {
     ncertReference: string | null;
   }[];
 }
+
+// Under this many milliseconds, a student cannot realistically have read and
+// solved a math question — the answer was rushed (guessed or skimmed). Used to
+// flag rushed answers and, when the rushed answer was still correct on a
+// non-easy item, probable lucky guesses ("flukes").
+const RUSH_FLOOR_MS = 3000;
 
 const DIMENSION_LABELS: Record<string, string> = {
   dimReading: "Reading",
@@ -400,6 +422,17 @@ export async function generateReport(sessionId: string): Promise<DiagnosticRepor
           : t > avgTime * 1.6
             ? "slow"
             : "steady";
+    const difficulty = r.servedDifficulty ?? q.difficultyBand;
+    // Rushed: answered too fast to have genuinely read and solved. Twin probes
+    // are diagnostic follow-ups, not part of the pacing story, so exclude them.
+    const rushed = !r.twinProbe && t !== null && t > 0 && t < RUSH_FLOOR_MS;
+    // Fluke: got a medium/hard question right in that same blink — the BKT
+    // mastery update already discounts it; here we make it visible to the
+    // reader. Easy and unknown-difficulty items are excluded to avoid over-flagging.
+    const likelyGuess =
+      rushed &&
+      r.isCorrect === true &&
+      (difficulty === "medium" || difficulty === "hard");
     return {
       order: i + 1,
       questionId: r.questionId,
@@ -417,10 +450,12 @@ export async function generateReport(sessionId: string): Promise<DiagnosticRepor
       skillName: skill?.skillName ?? null,
       topicArea: skill?.topicArea ?? null,
       grade: r.servedGrade ?? q.gradeLevel,
-      difficulty: r.servedDifficulty ?? q.difficultyBand,
+      difficulty,
       primaryDimension: q.dimensions?.primaryDimension ?? null,
       timeMs: t,
       pace,
+      rushed,
+      likelyGuess,
       thetaAfter: r.thetaAfter,
       pMasteryAfter: r.pMasteryAfter,
       trapType: r.trapType ?? trap?.trapType ?? null,
@@ -429,6 +464,45 @@ export async function generateReport(sessionId: string): Promise<DiagnosticRepor
       practiceNext,
     };
   });
+
+  // Test-taking behaviour: flukes (lucky guesses) and rushed answers, derived
+  // from the per-question flags above, plus plain-English notes the report
+  // surfaces so the score is read in context.
+  const likelyGuesses = questionAnalysis.filter((x) => x.likelyGuess).length;
+  const rushedAnswers = questionAnalysis.filter((x) => x.rushed).length;
+  const rushedMistakes = questionAnalysis.filter(
+    (x) => x.rushed && !x.isCorrect
+  ).length;
+  const behaviorNotes: string[] = [];
+  if (likelyGuesses >= 2) {
+    behaviorNotes.push(
+      `${likelyGuesses} harder questions were answered correctly in barely a second or two — those look like lucky guesses, so treat the mastery on those skills with some caution.`
+    );
+  } else if (likelyGuesses === 1) {
+    behaviorNotes.push(
+      `One harder question was answered correctly almost instantly — it may have been a lucky guess rather than a secure skill.`
+    );
+  }
+  if (rushedMistakes >= 2) {
+    behaviorNotes.push(
+      `${rushedMistakes} questions were rushed — answered in under 3 seconds — and got wrong. Slowing down and re-reading could turn several of these into correct answers.`
+    );
+  } else if (rushedAnswers >= 3) {
+    behaviorNotes.push(
+      `${rushedAnswers} questions were answered very quickly (under 3 seconds each). Make sure every question is read fully before answering.`
+    );
+  } else if (rushedMistakes === 1) {
+    behaviorNotes.push(
+      `One question was rushed and got wrong — that reads as a careless slip rather than a knowledge gap.`
+    );
+  }
+  const behavior = {
+    likelyGuesses,
+    rushedAnswers,
+    rushedMistakes,
+    rushFloorMs: RUSH_FLOOR_MS,
+    notes: behaviorNotes,
+  };
 
   // Per-skill and per-topic aggregates (detailed-analysis page).
   const finalPL = new Map(bktRows.map((b) => [b.skillId, b.pMastery]));
@@ -572,6 +646,7 @@ export async function generateReport(sessionId: string): Promise<DiagnosticRepor
       skillId: f.skillId,
       skillName: skillMap.get(f.skillId)?.skillName ?? f.skillId,
     })),
+    behavior,
     narrative,
     focusAreas,
   };
