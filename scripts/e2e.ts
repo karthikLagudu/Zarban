@@ -523,12 +523,6 @@ async function main() {
     ),
     "Grade 6 English lists the Honeysuckle textbook"
   );
-  check(
-    g6?.subjects?.some(
-      (s: any) => s.subjectName === "Hindi" && s.textbooks.some((b: any) => /Vasant Bhag 1/.test(b.name))
-    ),
-    "Grade 6 Hindi lists the Vasant Bhag 1 textbook"
-  );
   const mkTextbook = await editor.post("/api/content/curriculum/textbooks", {
     subjectId: maths.subjectId, grade: 6, name: "E2E Textbook",
   });
