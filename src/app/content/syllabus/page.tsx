@@ -5,7 +5,7 @@
 // added or removed to match the exact edition in use.
 
 import { useEffect, useMemo, useState } from "react";
-import { BookOpen, Layers, Loader2, Plus, X } from "lucide-react";
+import { BookOpen, ExternalLink, Layers, Link2, Loader2, Plus, X } from "lucide-react";
 
 interface Chapter {
   topicId: string;
@@ -15,6 +15,16 @@ interface Chapter {
 interface Textbook {
   textbookId: string;
   name: string;
+  pdfUrl: string | null;
+}
+
+// Link to a book's soft copy: the attached URL if set, else a search scoped to
+// the official (free) NCERT source. We never host the copyrighted files.
+function softCopyHref(pdfUrl: string | null, grade: number, name: string): string {
+  if (pdfUrl) return pdfUrl;
+  return `https://www.google.com/search?q=${encodeURIComponent(
+    `NCERT Class ${grade} ${name} textbook PDF site:ncert.nic.in`
+  )}`;
 }
 interface SubjectBlock {
   subjectId: string;
@@ -36,6 +46,24 @@ export default function SyllabusPage() {
   const [active, setActive] = useState<number | null>(null);
   const [addFor, setAddFor] = useState<string | null>(null); // subjectId being edited
   const [addName, setAddName] = useState("");
+  const [editUrlFor, setEditUrlFor] = useState<string | null>(null); // textbookId
+  const [urlValue, setUrlValue] = useState("");
+
+  async function saveUrl(textbookId: string) {
+    const r = await fetch(`/api/content/curriculum/textbooks/${textbookId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pdfUrl: urlValue.trim() || null }),
+    });
+    if (r.ok) {
+      setEditUrlFor(null);
+      setUrlValue("");
+      load();
+    } else {
+      const d = await r.json();
+      setError(d.error ?? "Could not save the link");
+    }
+  }
 
   async function load() {
     const r = await fetch("/api/content/syllabus");
@@ -154,22 +182,71 @@ export default function SyllabusPage() {
                       {s.textbooks.length === 0 && (
                         <span className="text-xs italic text-slate-400">No textbook listed</span>
                       )}
-                      {s.textbooks.map((b) => (
-                        <span
-                          key={b.textbookId}
-                          className="group flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-800 ring-1 ring-emerald-100"
-                        >
-                          <BookOpen className="h-3.5 w-3.5 text-emerald-500" />
-                          {b.name}
-                          <button
-                            onClick={() => removeTextbook(b.textbookId)}
-                            title="Remove textbook"
-                            className="text-emerald-400 opacity-0 transition hover:text-rose-600 group-hover:opacity-100"
+                      {s.textbooks.map((b) =>
+                        editUrlFor === b.textbookId ? (
+                          <span key={b.textbookId} className="flex items-center gap-1">
+                            <input
+                              value={urlValue}
+                              onChange={(e) => setUrlValue(e.target.value)}
+                              onKeyDown={(e) => e.key === "Enter" && saveUrl(b.textbookId)}
+                              placeholder="https://…  (soft-copy link)"
+                              autoFocus
+                              className="w-64 rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm"
+                            />
+                            <button
+                              onClick={() => saveUrl(b.textbookId)}
+                              className="rounded-lg bg-emerald-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditUrlFor(null);
+                                setUrlValue("");
+                              }}
+                              className="rounded-lg px-2 py-1.5 text-slate-400 hover:bg-slate-100"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </span>
+                        ) : (
+                          <span
+                            key={b.textbookId}
+                            className="group flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-800 ring-1 ring-emerald-100"
                           >
-                            <X className="h-3.5 w-3.5" />
-                          </button>
-                        </span>
-                      ))}
+                            <a
+                              href={softCopyHref(b.pdfUrl, current.grade, b.name)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1.5 hover:underline"
+                              title={b.pdfUrl ? "Open the attached soft copy" : "Find the official NCERT PDF"}
+                            >
+                              <BookOpen className="h-3.5 w-3.5 text-emerald-500" />
+                              {b.name}
+                              <ExternalLink
+                                className={`h-3 w-3 ${b.pdfUrl ? "text-emerald-600" : "text-emerald-300"}`}
+                              />
+                            </a>
+                            <button
+                              onClick={() => {
+                                setEditUrlFor(b.textbookId);
+                                setUrlValue(b.pdfUrl ?? "");
+                              }}
+                              title={b.pdfUrl ? "Edit soft-copy link" : "Attach a soft-copy link"}
+                              className="text-emerald-400 opacity-0 transition hover:text-emerald-700 group-hover:opacity-100"
+                            >
+                              <Link2 className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              onClick={() => removeTextbook(b.textbookId)}
+                              title="Remove textbook"
+                              className="text-emerald-400 opacity-0 transition hover:text-rose-600 group-hover:opacity-100"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </span>
+                        )
+                      )}
                       {addFor === s.subjectId ? (
                         <span className="flex items-center gap-1">
                           <input

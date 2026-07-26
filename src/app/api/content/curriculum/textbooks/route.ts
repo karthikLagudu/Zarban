@@ -19,12 +19,20 @@ export async function POST(req: NextRequest) {
   const subject = await prisma.subject.findUnique({ where: { subjectId } });
   if (!subject) return NextResponse.json({ error: "Subject not found" }, { status: 404 });
 
+  const pdfUrl = body.pdfUrl ? String(body.pdfUrl).trim() : null;
   const nextOrder = await prisma.textbook.count({ where: { subjectId, grade } });
   const textbook = await prisma.textbook.create({
-    data: { subjectId, grade, name, order: nextOrder },
+    data: { subjectId, grade, name, pdfUrl, order: nextOrder },
   });
   return NextResponse.json(
-    { textbook: { textbookId: textbook.textbookId, name: textbook.name, grade: textbook.grade } },
+    {
+      textbook: {
+        textbookId: textbook.textbookId,
+        name: textbook.name,
+        grade: textbook.grade,
+        pdfUrl: textbook.pdfUrl,
+      },
+    },
     { status: 201 }
   );
 }

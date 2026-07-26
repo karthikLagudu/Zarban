@@ -5,7 +5,7 @@
 // curriculum editor (subjects + chapters) lives in the Content Studio.
 
 import { useEffect, useMemo, useState } from "react";
-import { BookOpen, Layers, Loader2, Plus, X } from "lucide-react";
+import { BookOpen, ExternalLink, Layers, Link2, Loader2, Plus, X } from "lucide-react";
 import { useAdmin } from "../admin-context";
 
 interface Chapter {
@@ -16,9 +16,18 @@ interface Chapter {
 interface SubjectBlock {
   subjectId: string;
   subjectName: string;
-  textbooks: { textbookId: string; name: string }[];
+  textbooks: { textbookId: string; name: string; pdfUrl: string | null }[];
   chapters: Chapter[];
   chapterCount: number;
+}
+
+// Soft-copy link: the attached URL if set, else a search scoped to the official
+// (free) NCERT source. The files themselves are never hosted here.
+function softCopyHref(pdfUrl: string | null, grade: number, name: string): string {
+  if (pdfUrl) return pdfUrl;
+  return `https://www.google.com/search?q=${encodeURIComponent(
+    `NCERT Class ${grade} ${name} textbook PDF site:ncert.nic.in`
+  )}`;
 }
 interface GradeBlock {
   grade: number;
@@ -35,6 +44,24 @@ export default function AdminSyllabusPage() {
   const [active, setActive] = useState<number | null>(null);
   const [addFor, setAddFor] = useState<string | null>(null);
   const [addName, setAddName] = useState("");
+  const [editUrlFor, setEditUrlFor] = useState<string | null>(null);
+  const [urlValue, setUrlValue] = useState("");
+
+  async function saveUrl(textbookId: string) {
+    const r = await fetch(`/api/content/curriculum/textbooks/${textbookId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pdfUrl: urlValue.trim() || null }),
+    });
+    if (r.ok) {
+      setEditUrlFor(null);
+      setUrlValue("");
+      load();
+    } else {
+      const d = await r.json();
+      setError(d.error ?? "Could not save the link");
+    }
+  }
 
   async function load() {
     const r = await fetch("/api/admin/syllabus");
@@ -154,24 +181,75 @@ export default function AdminSyllabusPage() {
                       {s.textbooks.length === 0 && (
                         <span className="text-xs italic text-slate-400">No textbook listed</span>
                       )}
-                      {s.textbooks.map((b) => (
-                        <span
-                          key={b.textbookId}
-                          className="group flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1.5 text-sm font-semibold text-indigo-800 ring-1 ring-indigo-100"
-                        >
-                          <BookOpen className="h-3.5 w-3.5 text-indigo-500" />
-                          {b.name}
-                          {canEdit && (
+                      {s.textbooks.map((b) =>
+                        editUrlFor === b.textbookId ? (
+                          <span key={b.textbookId} className="flex items-center gap-1">
+                            <input
+                              value={urlValue}
+                              onChange={(e) => setUrlValue(e.target.value)}
+                              onKeyDown={(e) => e.key === "Enter" && saveUrl(b.textbookId)}
+                              placeholder="https://…  (soft-copy link)"
+                              autoFocus
+                              className="w-64 rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm"
+                            />
                             <button
-                              onClick={() => removeTextbook(b.textbookId)}
-                              title="Remove textbook"
-                              className="text-indigo-400 opacity-0 transition hover:text-rose-600 group-hover:opacity-100"
+                              onClick={() => saveUrl(b.textbookId)}
+                              className="rounded-lg bg-indigo-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700"
                             >
-                              <X className="h-3.5 w-3.5" />
+                              Save
                             </button>
-                          )}
-                        </span>
-                      ))}
+                            <button
+                              onClick={() => {
+                                setEditUrlFor(null);
+                                setUrlValue("");
+                              }}
+                              className="rounded-lg px-2 py-1.5 text-slate-400 hover:bg-slate-100"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </span>
+                        ) : (
+                          <span
+                            key={b.textbookId}
+                            className="group flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1.5 text-sm font-semibold text-indigo-800 ring-1 ring-indigo-100"
+                          >
+                            <a
+                              href={softCopyHref(b.pdfUrl, current.grade, b.name)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1.5 hover:underline"
+                              title={b.pdfUrl ? "Open the attached soft copy" : "Find the official NCERT PDF"}
+                            >
+                              <BookOpen className="h-3.5 w-3.5 text-indigo-500" />
+                              {b.name}
+                              <ExternalLink
+                                className={`h-3 w-3 ${b.pdfUrl ? "text-indigo-600" : "text-indigo-300"}`}
+                              />
+                            </a>
+                            {canEdit && (
+                              <>
+                                <button
+                                  onClick={() => {
+                                    setEditUrlFor(b.textbookId);
+                                    setUrlValue(b.pdfUrl ?? "");
+                                  }}
+                                  title={b.pdfUrl ? "Edit soft-copy link" : "Attach a soft-copy link"}
+                                  className="text-indigo-400 opacity-0 transition hover:text-indigo-700 group-hover:opacity-100"
+                                >
+                                  <Link2 className="h-3.5 w-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => removeTextbook(b.textbookId)}
+                                  title="Remove textbook"
+                                  className="text-indigo-400 opacity-0 transition hover:text-rose-600 group-hover:opacity-100"
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                </button>
+                              </>
+                            )}
+                          </span>
+                        )
+                      )}
                       {canEdit &&
                         (addFor === s.subjectId ? (
                           <span className="flex items-center gap-1">

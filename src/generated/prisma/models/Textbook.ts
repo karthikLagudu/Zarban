@@ -41,6 +41,7 @@ export type TextbookMinAggregateOutputType = {
   subjectId: string | null
   grade: number | null
   name: string | null
+  pdfUrl: string | null
   order: number | null
   createdAt: Date | null
 }
@@ -50,6 +51,7 @@ export type TextbookMaxAggregateOutputType = {
   subjectId: string | null
   grade: number | null
   name: string | null
+  pdfUrl: string | null
   order: number | null
   createdAt: Date | null
 }
@@ -59,6 +61,7 @@ export type TextbookCountAggregateOutputType = {
   subjectId: number
   grade: number
   name: number
+  pdfUrl: number
   order: number
   createdAt: number
   _all: number
@@ -80,6 +83,7 @@ export type TextbookMinAggregateInputType = {
   subjectId?: true
   grade?: true
   name?: true
+  pdfUrl?: true
   order?: true
   createdAt?: true
 }
@@ -89,6 +93,7 @@ export type TextbookMaxAggregateInputType = {
   subjectId?: true
   grade?: true
   name?: true
+  pdfUrl?: true
   order?: true
   createdAt?: true
 }
@@ -98,6 +103,7 @@ export type TextbookCountAggregateInputType = {
   subjectId?: true
   grade?: true
   name?: true
+  pdfUrl?: true
   order?: true
   createdAt?: true
   _all?: true
@@ -194,6 +200,7 @@ export type TextbookGroupByOutputType = {
   subjectId: string
   grade: number
   name: string
+  pdfUrl: string | null
   order: number
   createdAt: Date
   _count: TextbookCountAggregateOutputType | null
@@ -226,6 +233,7 @@ export type TextbookWhereInput = {
   subjectId?: Prisma.StringFilter<"Textbook"> | string
   grade?: Prisma.IntFilter<"Textbook"> | number
   name?: Prisma.StringFilter<"Textbook"> | string
+  pdfUrl?: Prisma.StringNullableFilter<"Textbook"> | string | null
   order?: Prisma.IntFilter<"Textbook"> | number
   createdAt?: Prisma.DateTimeFilter<"Textbook"> | Date | string
   subject?: Prisma.XOR<Prisma.SubjectScalarRelationFilter, Prisma.SubjectWhereInput>
@@ -236,6 +244,7 @@ export type TextbookOrderByWithRelationInput = {
   subjectId?: Prisma.SortOrder
   grade?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  pdfUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   order?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   subject?: Prisma.SubjectOrderByWithRelationInput
@@ -249,6 +258,7 @@ export type TextbookWhereUniqueInput = Prisma.AtLeast<{
   subjectId?: Prisma.StringFilter<"Textbook"> | string
   grade?: Prisma.IntFilter<"Textbook"> | number
   name?: Prisma.StringFilter<"Textbook"> | string
+  pdfUrl?: Prisma.StringNullableFilter<"Textbook"> | string | null
   order?: Prisma.IntFilter<"Textbook"> | number
   createdAt?: Prisma.DateTimeFilter<"Textbook"> | Date | string
   subject?: Prisma.XOR<Prisma.SubjectScalarRelationFilter, Prisma.SubjectWhereInput>
@@ -259,6 +269,7 @@ export type TextbookOrderByWithAggregationInput = {
   subjectId?: Prisma.SortOrder
   grade?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  pdfUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   order?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.TextbookCountOrderByAggregateInput
@@ -276,6 +287,7 @@ export type TextbookScalarWhereWithAggregatesInput = {
   subjectId?: Prisma.StringWithAggregatesFilter<"Textbook"> | string
   grade?: Prisma.IntWithAggregatesFilter<"Textbook"> | number
   name?: Prisma.StringWithAggregatesFilter<"Textbook"> | string
+  pdfUrl?: Prisma.StringNullableWithAggregatesFilter<"Textbook"> | string | null
   order?: Prisma.IntWithAggregatesFilter<"Textbook"> | number
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Textbook"> | Date | string
 }
@@ -284,6 +296,7 @@ export type TextbookCreateInput = {
   textbookId?: string
   grade: number
   name: string
+  pdfUrl?: string | null
   order?: number
   createdAt?: Date | string
   subject: Prisma.SubjectCreateNestedOneWithoutTextbooksInput
@@ -294,6 +307,7 @@ export type TextbookUncheckedCreateInput = {
   subjectId: string
   grade: number
   name: string
+  pdfUrl?: string | null
   order?: number
   createdAt?: Date | string
 }
@@ -302,6 +316,7 @@ export type TextbookUpdateInput = {
   textbookId?: Prisma.StringFieldUpdateOperationsInput | string
   grade?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  pdfUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   order?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   subject?: Prisma.SubjectUpdateOneRequiredWithoutTextbooksNestedInput
@@ -312,6 +327,7 @@ export type TextbookUncheckedUpdateInput = {
   subjectId?: Prisma.StringFieldUpdateOperationsInput | string
   grade?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  pdfUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   order?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -321,6 +337,7 @@ export type TextbookCreateManyInput = {
   subjectId: string
   grade: number
   name: string
+  pdfUrl?: string | null
   order?: number
   createdAt?: Date | string
 }
@@ -329,6 +346,7 @@ export type TextbookUpdateManyMutationInput = {
   textbookId?: Prisma.StringFieldUpdateOperationsInput | string
   grade?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  pdfUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   order?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -338,6 +356,7 @@ export type TextbookUncheckedUpdateManyInput = {
   subjectId?: Prisma.StringFieldUpdateOperationsInput | string
   grade?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  pdfUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   order?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -357,6 +376,7 @@ export type TextbookCountOrderByAggregateInput = {
   subjectId?: Prisma.SortOrder
   grade?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  pdfUrl?: Prisma.SortOrder
   order?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
@@ -371,6 +391,7 @@ export type TextbookMaxOrderByAggregateInput = {
   subjectId?: Prisma.SortOrder
   grade?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  pdfUrl?: Prisma.SortOrder
   order?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
@@ -380,6 +401,7 @@ export type TextbookMinOrderByAggregateInput = {
   subjectId?: Prisma.SortOrder
   grade?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  pdfUrl?: Prisma.SortOrder
   order?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
@@ -435,6 +457,7 @@ export type TextbookCreateWithoutSubjectInput = {
   textbookId?: string
   grade: number
   name: string
+  pdfUrl?: string | null
   order?: number
   createdAt?: Date | string
 }
@@ -443,6 +466,7 @@ export type TextbookUncheckedCreateWithoutSubjectInput = {
   textbookId?: string
   grade: number
   name: string
+  pdfUrl?: string | null
   order?: number
   createdAt?: Date | string
 }
@@ -480,6 +504,7 @@ export type TextbookScalarWhereInput = {
   subjectId?: Prisma.StringFilter<"Textbook"> | string
   grade?: Prisma.IntFilter<"Textbook"> | number
   name?: Prisma.StringFilter<"Textbook"> | string
+  pdfUrl?: Prisma.StringNullableFilter<"Textbook"> | string | null
   order?: Prisma.IntFilter<"Textbook"> | number
   createdAt?: Prisma.DateTimeFilter<"Textbook"> | Date | string
 }
@@ -488,6 +513,7 @@ export type TextbookCreateManySubjectInput = {
   textbookId?: string
   grade: number
   name: string
+  pdfUrl?: string | null
   order?: number
   createdAt?: Date | string
 }
@@ -496,6 +522,7 @@ export type TextbookUpdateWithoutSubjectInput = {
   textbookId?: Prisma.StringFieldUpdateOperationsInput | string
   grade?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  pdfUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   order?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -504,6 +531,7 @@ export type TextbookUncheckedUpdateWithoutSubjectInput = {
   textbookId?: Prisma.StringFieldUpdateOperationsInput | string
   grade?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  pdfUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   order?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -512,6 +540,7 @@ export type TextbookUncheckedUpdateManyWithoutSubjectInput = {
   textbookId?: Prisma.StringFieldUpdateOperationsInput | string
   grade?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  pdfUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   order?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -523,6 +552,7 @@ export type TextbookSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   subjectId?: boolean
   grade?: boolean
   name?: boolean
+  pdfUrl?: boolean
   order?: boolean
   createdAt?: boolean
   subject?: boolean | Prisma.SubjectDefaultArgs<ExtArgs>
@@ -533,6 +563,7 @@ export type TextbookSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   subjectId?: boolean
   grade?: boolean
   name?: boolean
+  pdfUrl?: boolean
   order?: boolean
   createdAt?: boolean
   subject?: boolean | Prisma.SubjectDefaultArgs<ExtArgs>
@@ -543,6 +574,7 @@ export type TextbookSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   subjectId?: boolean
   grade?: boolean
   name?: boolean
+  pdfUrl?: boolean
   order?: boolean
   createdAt?: boolean
   subject?: boolean | Prisma.SubjectDefaultArgs<ExtArgs>
@@ -553,11 +585,12 @@ export type TextbookSelectScalar = {
   subjectId?: boolean
   grade?: boolean
   name?: boolean
+  pdfUrl?: boolean
   order?: boolean
   createdAt?: boolean
 }
 
-export type TextbookOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"textbookId" | "subjectId" | "grade" | "name" | "order" | "createdAt", ExtArgs["result"]["textbook"]>
+export type TextbookOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"textbookId" | "subjectId" | "grade" | "name" | "pdfUrl" | "order" | "createdAt", ExtArgs["result"]["textbook"]>
 export type TextbookInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   subject?: boolean | Prisma.SubjectDefaultArgs<ExtArgs>
 }
@@ -578,6 +611,7 @@ export type $TextbookPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     subjectId: string
     grade: number
     name: string
+    pdfUrl: string | null
     order: number
     createdAt: Date
   }, ExtArgs["result"]["textbook"]>
@@ -1008,6 +1042,7 @@ export interface TextbookFieldRefs {
   readonly subjectId: Prisma.FieldRef<"Textbook", 'String'>
   readonly grade: Prisma.FieldRef<"Textbook", 'Int'>
   readonly name: Prisma.FieldRef<"Textbook", 'String'>
+  readonly pdfUrl: Prisma.FieldRef<"Textbook", 'String'>
   readonly order: Prisma.FieldRef<"Textbook", 'Int'>
   readonly createdAt: Prisma.FieldRef<"Textbook", 'DateTime'>
 }

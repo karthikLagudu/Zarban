@@ -2043,6 +2043,7 @@ export const TextbookScalarFieldEnum = {
   subjectId: 'subjectId',
   grade: 'grade',
   name: 'name',
+  pdfUrl: 'pdfUrl',
   order: 'order',
   createdAt: 'createdAt'
 } as const

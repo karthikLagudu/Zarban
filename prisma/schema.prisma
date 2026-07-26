@@ -157,6 +157,9 @@ model Textbook {
   subjectId  String   @map("subject_id")
   grade      Int
   name       String
+  // Link to the book's soft copy — the official free NCERT PDF, or a
+  // school-hosted copy. Not the file itself; we never host copyrighted content.
+  pdfUrl     String?  @map("pdf_url")
   order      Int      @default(0)
   createdAt  DateTime @default(now()) @map("created_at")
 

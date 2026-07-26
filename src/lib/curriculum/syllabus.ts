@@ -8,7 +8,7 @@ export interface SyllabusGrade {
   subjects: {
     subjectId: string;
     subjectName: string;
-    textbooks: { textbookId: string; name: string }[];
+    textbooks: { textbookId: string; name: string; pdfUrl: string | null }[];
     chapters: { topicId: string; chapterNo: number | null; name: string }[];
     chapterCount: number;
   }[];
@@ -37,7 +37,7 @@ export async function buildSyllabus(): Promise<SyllabusGrade[]> {
       .map((s) => {
         const textbooks = s.textbooks
           .filter((b) => b.grade === grade)
-          .map((b) => ({ textbookId: b.textbookId, name: b.name }));
+          .map((b) => ({ textbookId: b.textbookId, name: b.name, pdfUrl: b.pdfUrl }));
         const chapters = s.topics
           .filter((t) => t.grade === grade)
           .map((t) => ({ topicId: t.topicId, chapterNo: t.chapterNo, name: t.name }));

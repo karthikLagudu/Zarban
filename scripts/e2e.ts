@@ -523,11 +523,25 @@ async function main() {
     ),
     "Grade 6 English lists the Honeysuckle textbook"
   );
+  check(
+    g6?.subjects?.some((s: any) => s.textbooks.some((b: any) => "pdfUrl" in b)),
+    "syllabus textbooks expose a soft-copy (pdfUrl) field"
+  );
   const mkTextbook = await editor.post("/api/content/curriculum/textbooks", {
     subjectId: maths.subjectId, grade: 6, name: "E2E Textbook",
   });
   check(mkTextbook.status === 201, "editor adds a textbook");
-  const delTextbook = await editor.del(`/api/content/curriculum/textbooks/${mkTextbook.json.textbook.textbookId}`);
+  const tbId = mkTextbook.json.textbook.textbookId;
+  const setUrl = await editor.req("PATCH", `/api/content/curriculum/textbooks/${tbId}`, {
+    pdfUrl: "https://ncert.nic.in/textbook.php",
+  });
+  check(
+    setUrl.status === 200 && setUrl.json.textbook?.pdfUrl === "https://ncert.nic.in/textbook.php",
+    "editor attaches a soft-copy link to a textbook"
+  );
+  const badUrl = await editor.req("PATCH", `/api/content/curriculum/textbooks/${tbId}`, { pdfUrl: "not-a-url" });
+  check(badUrl.status === 400, "an invalid soft-copy link is rejected (400)");
+  const delTextbook = await editor.del(`/api/content/curriculum/textbooks/${tbId}`);
   check(delTextbook.status === 200, "editor deletes a textbook");
 
   section("6 · Cross-role denial");
