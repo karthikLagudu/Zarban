@@ -135,16 +135,19 @@ model QuestionDimension {
   @@map("question_dimensions")
 }
 
-// ── Classrooms (admin-managed rosters) ──────────────────────────────────────
+// ── Classrooms (admin-managed rosters, optionally owned by a teacher) ────────
 model Classroom {
   classroomId String   @id @default(uuid()) @map("classroom_id")
   name        String
   grade       Int?
   section     String?
+  teacherId   Int?     @map("teacher_id")
   createdAt   DateTime @default(now()) @map("created_at")
 
+  teacher  AdminUser? @relation("classTeacher", fields: [teacherId], references: [id], onDelete: SetNull, onUpdate: NoAction)
   students Student[]
 
+  @@index([teacherId])
   @@map("classrooms")
 }
 
@@ -310,6 +313,8 @@ model AdminUser {
   passwordHash String   @map("password_hash")
   role         String   @default("Viewer") // Admin | Teacher | Viewer | Editor
   createdAt    DateTime @default(now()) @map("created_at")
+
+  classes Classroom[] @relation("classTeacher")
 
   @@map("admin_users")
 }

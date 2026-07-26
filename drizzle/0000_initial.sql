@@ -83,7 +83,9 @@ CREATE TABLE "classrooms" (
     "name" TEXT NOT NULL,
     "grade" INTEGER,
     "section" TEXT,
-    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "teacher_id" INTEGER,
+    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "classrooms_teacher_id_fkey" FOREIGN KEY ("teacher_id") REFERENCES "admin_users" ("id") ON DELETE SET NULL ON UPDATE NO ACTION
 );
 
 CREATE TABLE "students" (
@@ -4144,6 +4146,7 @@ INSERT INTO "admin_users" ("id", "email", "name", "password_hash", "role", "crea
 CREATE INDEX "admin_audit_log_created_at_idx" ON "admin_audit_log"("created_at");
 CREATE UNIQUE INDEX "admin_users_email_key" ON "admin_users"("email");
 CREATE UNIQUE INDEX "answer_traps_question_id_option_label_key" ON "answer_traps"("question_id", "option_label");
+CREATE INDEX "classrooms_teacher_id_idx" ON "classrooms"("teacher_id");
 CREATE INDEX "knowledge_graph_parent_skill_id_idx" ON "knowledge_graph"("parent_skill_id");
 CREATE INDEX "q_matrix_skill_id_idx" ON "q_matrix"("skill_id");
 CREATE INDEX "questions_grade_level_difficulty_band_idx" ON "questions"("grade_level", "difficulty_band");

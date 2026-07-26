@@ -6,11 +6,13 @@
 import Link from "next/link";
 import { use, useEffect, useMemo, useState } from "react";
 import {
+  AlertTriangle,
   ArrowLeft,
   Loader2,
   Search,
   Trash2,
   UserPlus,
+  UserRound,
   Users,
   X,
 } from "lucide-react";
@@ -25,6 +27,7 @@ interface RosterStudent {
   lastAssessmentAt: string | null;
   lastScore: number | null;
   lastSessionId: string | null;
+  attention: string | null;
 }
 interface Detail {
   classroom: {
@@ -32,10 +35,16 @@ interface Detail {
     name: string;
     grade: number | null;
     section: string | null;
+    teacher: { id: number; name: string } | null;
     createdAt: string;
   };
   students: RosterStudent[];
-  stats: { studentCount: number; assessedCount: number; avgLastScore: number | null };
+  stats: {
+    studentCount: number;
+    assessedCount: number;
+    avgLastScore: number | null;
+    attentionCount: number;
+  };
 }
 
 export default function ClassroomDetailPage({
@@ -49,6 +58,7 @@ export default function ClassroomDetailPage({
   const [data, setData] = useState<Detail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
+  const [teachers, setTeachers] = useState<{ id: number; name: string | null; email: string; role: string }[]>([]);
 
   async function load() {
     const r = await fetch(`/api/admin/classrooms/${id}`);
@@ -59,6 +69,25 @@ export default function ClassroomDetailPage({
   useEffect(() => {
     load();
   }, [id]);
+
+  useEffect(() => {
+    if (!canEdit) return;
+    fetch("/api/admin/users")
+      .then((r) => r.json())
+      .then((d) =>
+        setTeachers((d.users ?? []).filter((u: any) => u.role === "Teacher" || u.role === "Admin"))
+      )
+      .catch(() => {});
+  }, [canEdit]);
+
+  async function assignTeacher(teacherId: string) {
+    const r = await fetch(`/api/admin/classrooms/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ teacherId: teacherId || null }),
+    });
+    if (r.ok) load();
+  }
 
   async function removeStudent(s: RosterStudent) {
     if (!confirm(`Remove ${s.name ?? "this student"} from the classroom? Their history is kept.`)) return;
@@ -105,6 +134,27 @@ export default function ClassroomDetailPage({
               : "No grade set"}{" "}
             · created {new Date(classroom.createdAt).toLocaleDateString()}
           </p>
+          <div className="mt-2 flex items-center gap-2 text-sm">
+            <UserRound className="h-4 w-4 text-slate-400" />
+            {canEdit ? (
+              <select
+                value={classroom.teacher?.id ?? ""}
+                onChange={(e) => assignTeacher(e.target.value)}
+                className="rounded-lg border border-slate-300 px-2.5 py-1 text-sm"
+              >
+                <option value="">No teacher assigned</option>
+                {teachers.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name ?? t.email} ({t.role})
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span className="font-medium text-slate-600">
+                {classroom.teacher ? classroom.teacher.name : "No teacher assigned"}
+              </span>
+            )}
+          </div>
         </div>
         {canEdit && (
           <div className="flex gap-2">
@@ -125,13 +175,14 @@ export default function ClassroomDetailPage({
       </div>
 
       {/* Stats */}
-      <div className="mt-5 grid grid-cols-3 gap-3">
+      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat label="Students" value={stats.studentCount} />
         <Stat label="Assessed" value={stats.assessedCount} />
         <Stat
           label="Avg last score"
           value={stats.avgLastScore !== null ? `${stats.avgLastScore}%` : "—"}
         />
+        <Stat label="Need attention" value={stats.attentionCount} tone={stats.attentionCount > 0 ? "amber" : undefined} />
       </div>
 
       {/* Roster */}
@@ -168,6 +219,11 @@ export default function ClassroomDetailPage({
                       {s.email ?? "no email"}
                       {s.classGrade ? ` · Grade ${s.classGrade}` : ""}
                     </p>
+                    {s.attention && (
+                      <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 ring-1 ring-amber-100">
+                        <AlertTriangle className="h-3 w-3" /> {s.attention}
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3.5 tabular-nums text-slate-600">{s.sessionCount}</td>
                   <td className="px-4 py-3.5">
@@ -231,11 +287,29 @@ export default function ClassroomDetailPage({
   );
 }
 
-function Stat({ label, value }: { label: string; value: number | string }) {
+function Stat({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number | string;
+  tone?: "amber";
+}) {
   return (
-    <div className="rounded-2xl bg-slate-50 px-4 py-3 ring-1 ring-slate-100">
+    <div
+      className={`rounded-2xl px-4 py-3 ring-1 ${
+        tone === "amber" ? "bg-amber-50 ring-amber-100" : "bg-slate-50 ring-slate-100"
+      }`}
+    >
       <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{label}</p>
-      <p className="mt-0.5 text-xl font-bold text-slate-900 tabular-nums">{value}</p>
+      <p
+        className={`mt-0.5 text-xl font-bold tabular-nums ${
+          tone === "amber" ? "text-amber-700" : "text-slate-900"
+        }`}
+      >
+        {value}
+      </p>
     </div>
   );
 }

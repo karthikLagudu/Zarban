@@ -360,6 +360,30 @@ async function main() {
     "the new student appears in the roster"
   );
 
+  // Teacher monitoring: attention signals + teacher ownership.
+  check(detail.json.stats?.attentionCount >= 1, "roster flags students needing attention");
+  check(detail.json.students.some((s: any) => s.attention), "a student shows an attention reason");
+  const usersForT = (await admin.get("/api/admin/users")).json.users ?? [];
+  const teacherUser = usersForT.find((u: any) => u.email === "teacher@zarban.local");
+  const viewerUser = usersForT.find((u: any) => u.email === "viewer@zarban.local");
+  const setTeacher = await admin.req("PATCH", `/api/admin/classrooms/${roomId}`, { teacherId: teacherUser.id });
+  check(
+    setTeacher.status === 200 && setTeacher.json.classroom?.teacher?.id === teacherUser.id,
+    "admin assigns a teacher to the class"
+  );
+  const badTeacher = await admin.req("PATCH", `/api/admin/classrooms/${roomId}`, { teacherId: viewerUser.id });
+  check(badTeacher.status === 400, "a Viewer cannot be made the class teacher (400)");
+  const roomRow = (await admin.get("/api/admin/classrooms")).json.classrooms.find((c: any) => c.classroomId === roomId);
+  check(roomRow?.teacher?.id === teacherUser.id, "classroom list shows the assigned teacher");
+  check(typeof roomRow?.attentionCount === "number", "classroom list includes an attention count");
+  const teacherClient = new Client();
+  await teacherClient.post("/api/admin/auth/login", { email: "teacher@zarban.local", password: "teacher123" });
+  const mine = await teacherClient.get("/api/admin/classrooms?mine=1");
+  check(
+    mine.status === 200 && mine.json.classrooms.some((c: any) => c.classroomId === roomId),
+    "the teacher sees the class under My Classes"
+  );
+
   const listWithRoom = await admin.get("/api/admin/students");
   check(
     listWithRoom.json.students.some((s: any) => s.classroomName === "E2E Room 7A"),

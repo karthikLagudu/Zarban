@@ -169,6 +169,7 @@ export const ClassroomScalarFieldEnum = {
   name: 'name',
   grade: 'grade',
   section: 'section',
+  teacherId: 'teacherId',
   createdAt: 'createdAt'
 } as const
 
