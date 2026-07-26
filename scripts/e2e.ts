@@ -164,7 +164,7 @@ async function runAssessment(name: string, grade: number, mode: "all_correct" | 
   const pdf = await c.get(`/api/session/report/${sessionId}/pdf`);
   check(pdf.status === 200, `[${mode}] PDF export succeeds`);
 
-  return { sessionId, studentName: name };
+  return { sessionId, studentName: name, studentId: report.student?.studentId as string };
 }
 
 // ── Rushed / fluke behaviour detection ───────────────────────────────────────
@@ -224,6 +224,16 @@ async function main() {
 
   section("1 · Student lifecycle — strong student (all correct)");
   const strong = await runAssessment("E2E Strong", 8, "all_correct");
+
+  section("1b · Student learning hub (My Learning)");
+  const learn = await new Client().get(`/api/learn/${strong.studentId}`);
+  check(learn.status === 200, "learning hub loads for a student (public)");
+  check(learn.json?.summary?.assessments >= 1, `progress shows assessments (${learn.json?.summary?.assessments})`);
+  check(Array.isArray(learn.json?.trend) && learn.json.trend.length >= 1, "score trend present");
+  check(Array.isArray(learn.json?.skills), "skill mastery list present");
+  check(Array.isArray(learn.json?.sessions) && learn.json.sessions.length >= 1, "assessment history present");
+  const learn404 = await new Client().get("/api/learn/not-a-real-student");
+  check(learn404.status === 404, "unknown learner returns 404");
 
   section("2 · Student lifecycle — struggling student (all wrong)");
   await runAssessment("E2E Weak", 9, "all_wrong");

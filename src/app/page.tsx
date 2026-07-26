@@ -10,6 +10,7 @@ import {
   Compass,
   GraduationCap,
   Loader2,
+  LogIn,
   Sparkles,
 } from "lucide-react";
 
@@ -112,7 +113,14 @@ export default function LandingPage() {
       );
       localStorage.setItem(
         "zarban_profile",
-        JSON.stringify({ name: name.trim(), school: school.trim(), grade })
+        JSON.stringify({
+          name: name.trim(),
+          school: school.trim(),
+          grade,
+          // Persist the opaque student id so the learner can return to /learn
+          // and see their progress across sessions on this device.
+          studentId: data.student_id,
+        })
       );
       router.push("/assessment");
     } catch (e) {
@@ -129,7 +137,31 @@ export default function LandingPage() {
       <div className="animate-blob-slow absolute top-1/3 -right-40 h-[28rem] w-[28rem] rounded-full bg-violet-200/50 blur-3xl" />
       <div className="animate-blob absolute -bottom-40 left-1/4 h-80 w-80 rounded-full bg-sky-200/40 blur-3xl" />
 
-      <div className="relative mx-auto grid min-h-screen max-w-6xl items-center gap-12 px-6 py-14 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
+      {/* Top bar — the front door: students start below, staff sign in here. */}
+      <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md">
+            <GraduationCap className="h-5 w-5" />
+          </span>
+          <span className="font-display text-lg font-bold text-slate-900">Zarban</span>
+        </div>
+        <nav className="flex items-center gap-2 text-sm font-semibold">
+          <a
+            href="/learn"
+            className="hidden rounded-xl px-4 py-2 text-slate-600 transition hover:text-indigo-700 sm:inline-block"
+          >
+            My progress
+          </a>
+          <a
+            href="/admin/login"
+            className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white/80 px-4 py-2 text-slate-700 shadow-sm backdrop-blur transition hover:border-indigo-300 hover:text-indigo-700"
+          >
+            <LogIn className="h-4 w-4" /> Teacher / Admin
+          </a>
+        </nav>
+      </header>
+
+      <div className="relative mx-auto grid min-h-[calc(100vh-5rem)] max-w-6xl items-center gap-12 px-6 pb-14 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
         {/* Left: pitch */}
         <div className="animate-fade-up">
           <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-white/70 px-4 py-1.5 text-sm font-semibold text-indigo-700 shadow-sm backdrop-blur">

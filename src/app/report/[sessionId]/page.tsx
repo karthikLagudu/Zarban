@@ -21,6 +21,7 @@ import {
   Printer,
   Target,
   Timer,
+  TrendingUp,
   X,
   Zap,
 } from "lucide-react";
@@ -554,6 +555,13 @@ export default function ReportPage({
           >
             <Microscope className="h-5 w-5" />
             Detailed analysis
+          </a>
+          <a
+            href="/learn"
+            className="flex items-center gap-2 rounded-2xl border border-indigo-200 bg-indigo-50 px-6 py-3 font-semibold text-indigo-700 shadow-sm transition hover:bg-indigo-100"
+          >
+            <TrendingUp className="h-5 w-5" />
+            My learning
           </a>
           <a
             href="/"
