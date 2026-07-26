@@ -11,6 +11,7 @@ import {
   BookOpen,
   Boxes,
   FileSpreadsheet,
+  Layers,
   LayoutGrid,
   LibraryBig,
   LogOut,
@@ -20,6 +21,7 @@ import { ContentContext, type ContentUser } from "./content-context";
 
 const NAV = [
   { href: "/content", label: "Overview", icon: LayoutGrid, exact: true },
+  { href: "/content/syllabus", label: "Syllabus", icon: Layers },
   { href: "/content/curriculum", label: "Curriculum", icon: BookMarked },
   { href: "/content/skills", label: "Skills & Graph", icon: Network },
   { href: "/content/questions", label: "Questions", icon: LibraryBig },

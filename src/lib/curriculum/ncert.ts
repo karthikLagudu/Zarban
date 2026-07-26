@@ -289,3 +289,47 @@ export const NCERT_CURRICULUM: SeedSubject[] = [
   { name: "Social Science", topics: socialScience },
   { name: "English", topics: english },
 ];
+
+// ── NCERT textbooks, per subject per grade (in order) ───────────────────────
+export interface SeedTextbook {
+  subject: string;
+  grade: number;
+  name: string;
+}
+
+export const NCERT_TEXTBOOKS: SeedTextbook[] = [
+  // Mathematics — one book per grade.
+  ...[6, 7, 8, 9, 10].map((g) => ({ subject: "Mathematics", grade: g, name: "Mathematics" })),
+  // Science — one book per grade.
+  ...[6, 7, 8, 9, 10].map((g) => ({ subject: "Science", grade: g, name: "Science" })),
+  // English — a main reader + a supplementary reader per grade.
+  { subject: "English", grade: 6, name: "Honeysuckle" },
+  { subject: "English", grade: 6, name: "A Pact with the Sun (Supplementary)" },
+  { subject: "English", grade: 7, name: "Honeycomb" },
+  { subject: "English", grade: 7, name: "An Alien Hand (Supplementary)" },
+  { subject: "English", grade: 8, name: "Honeydew" },
+  { subject: "English", grade: 8, name: "It So Happened (Supplementary)" },
+  { subject: "English", grade: 9, name: "Beehive" },
+  { subject: "English", grade: 9, name: "Moments (Supplementary)" },
+  { subject: "English", grade: 10, name: "First Flight" },
+  { subject: "English", grade: 10, name: "Footprints Without Feet (Supplementary)" },
+  // Social Science — separate History / Geography / Civics (and Pol.Sci +
+  // Economics from grade 9) books.
+  { subject: "Social Science", grade: 6, name: "Our Pasts – I (History)" },
+  { subject: "Social Science", grade: 6, name: "The Earth: Our Habitat (Geography)" },
+  { subject: "Social Science", grade: 6, name: "Social and Political Life – I (Civics)" },
+  { subject: "Social Science", grade: 7, name: "Our Pasts – II (History)" },
+  { subject: "Social Science", grade: 7, name: "Our Environment (Geography)" },
+  { subject: "Social Science", grade: 7, name: "Social and Political Life – II (Civics)" },
+  { subject: "Social Science", grade: 8, name: "Our Pasts – III (History)" },
+  { subject: "Social Science", grade: 8, name: "Resources and Development (Geography)" },
+  { subject: "Social Science", grade: 8, name: "Social and Political Life – III (Civics)" },
+  { subject: "Social Science", grade: 9, name: "India and the Contemporary World – I (History)" },
+  { subject: "Social Science", grade: 9, name: "Contemporary India – I (Geography)" },
+  { subject: "Social Science", grade: 9, name: "Democratic Politics – I (Political Science)" },
+  { subject: "Social Science", grade: 9, name: "Economics" },
+  { subject: "Social Science", grade: 10, name: "India and the Contemporary World – II (History)" },
+  { subject: "Social Science", grade: 10, name: "Contemporary India – II (Geography)" },
+  { subject: "Social Science", grade: 10, name: "Democratic Politics – II (Political Science)" },
+  { subject: "Social Science", grade: 10, name: "Understanding Economic Development (Economics)" },
+];

@@ -144,9 +144,27 @@ model Subject {
   order     Int      @default(0)
   createdAt DateTime @default(now()) @map("created_at")
 
-  topics Topic[]
+  topics    Topic[]
+  textbooks Textbook[]
 
   @@map("subjects")
+}
+
+// NCERT textbook (a book a subject uses at a grade; a subject can have several
+// per grade — e.g. English has a main reader + a supplementary reader).
+model Textbook {
+  textbookId String   @id @default(uuid()) @map("textbook_id")
+  subjectId  String   @map("subject_id")
+  grade      Int
+  name       String
+  order      Int      @default(0)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  subject Subject @relation(fields: [subjectId], references: [subjectId], onDelete: Cascade)
+
+  @@index([grade])
+  @@index([subjectId, grade])
+  @@map("textbooks")
 }
 
 model Topic {

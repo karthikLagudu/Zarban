@@ -53,6 +53,11 @@ export type QuestionDimension = Prisma.QuestionDimensionModel
  */
 export type Subject = Prisma.SubjectModel
 /**
+ * Model Textbook
+ * 
+ */
+export type Textbook = Prisma.TextbookModel
+/**
  * Model Topic
  * 
  */

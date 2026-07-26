@@ -56,6 +56,7 @@ export const ModelName = {
   AnswerTrap: 'AnswerTrap',
   QuestionDimension: 'QuestionDimension',
   Subject: 'Subject',
+  Textbook: 'Textbook',
   Topic: 'Topic',
   Classroom: 'Classroom',
   Student: 'Student',
@@ -174,6 +175,18 @@ export const SubjectScalarFieldEnum = {
 } as const
 
 export type SubjectScalarFieldEnum = (typeof SubjectScalarFieldEnum)[keyof typeof SubjectScalarFieldEnum]
+
+
+export const TextbookScalarFieldEnum = {
+  textbookId: 'textbookId',
+  subjectId: 'subjectId',
+  grade: 'grade',
+  name: 'name',
+  order: 'order',
+  createdAt: 'createdAt'
+} as const
+
+export type TextbookScalarFieldEnum = (typeof TextbookScalarFieldEnum)[keyof typeof TextbookScalarFieldEnum]
 
 
 export const TopicScalarFieldEnum = {

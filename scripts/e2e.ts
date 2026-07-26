@@ -504,6 +504,27 @@ async function main() {
   const delSubject = await editor.del(`/api/content/curriculum/subjects/${subjId}`);
   check(delSubject.status === 200, "editor deletes a subject");
 
+  // Syllabus — textbooks laid out by grade.
+  const syllabus = await editor.get("/api/content/syllabus");
+  check(
+    syllabus.status === 200 && Array.isArray(syllabus.json.grades) && syllabus.json.grades.length >= 5,
+    `syllabus lists grades (${syllabus.json?.grades?.length})`
+  );
+  const g6 = syllabus.json.grades.find((g: any) => g.grade === 6);
+  check(!!g6 && g6.textbookCount > 0, `Grade 6 has textbooks (${g6?.textbookCount})`);
+  check(
+    g6?.subjects?.some(
+      (s: any) => s.subjectName === "English" && s.textbooks.some((b: any) => /Honeysuckle/.test(b.name))
+    ),
+    "Grade 6 English lists the Honeysuckle textbook"
+  );
+  const mkTextbook = await editor.post("/api/content/curriculum/textbooks", {
+    subjectId: maths.subjectId, grade: 6, name: "E2E Textbook",
+  });
+  check(mkTextbook.status === 201, "editor adds a textbook");
+  const delTextbook = await editor.del(`/api/content/curriculum/textbooks/${mkTextbook.json.textbook.textbookId}`);
+  check(delTextbook.status === 200, "editor deletes a textbook");
+
   section("6 · Cross-role denial");
   const viewer = new Client();
   const vLogin = await viewer.post("/api/admin/auth/login", { email: "viewer@zarban.local", password: "viewer123" });
@@ -512,6 +533,8 @@ async function main() {
   check(vContent.status === 403, "viewer is denied content authoring (403)");
   const vCurriculum = await viewer.get("/api/content/curriculum");
   check(vCurriculum.status === 403, "viewer cannot access the curriculum editor (403)");
+  const vSyllabus = await viewer.get("/api/content/syllabus");
+  check(vSyllabus.status === 403, "viewer cannot access the syllabus (403)");
   const vSkillCreate = await viewer.post("/api/content/skills", { skillId: "S_901", skillName: "nope" });
   check(vSkillCreate.status === 403, "viewer cannot create content (403)");
   const vUsers = await viewer.get("/api/admin/users");

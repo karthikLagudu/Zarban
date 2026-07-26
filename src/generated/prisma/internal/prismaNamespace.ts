@@ -397,6 +397,7 @@ export const ModelName = {
   AnswerTrap: 'AnswerTrap',
   QuestionDimension: 'QuestionDimension',
   Subject: 'Subject',
+  Textbook: 'Textbook',
   Topic: 'Topic',
   Classroom: 'Classroom',
   Student: 'Student',
@@ -424,7 +425,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "skill" | "knowledgeGraphEdge" | "question" | "qMatrixEntry" | "answerTrap" | "questionDimension" | "subject" | "topic" | "classroom" | "student" | "assessmentSession" | "response" | "bktState" | "dimensionScore" | "traversalEvent" | "reviewFlag" | "setting" | "adminUser" | "adminAuditLog"
+    modelProps: "skill" | "knowledgeGraphEdge" | "question" | "qMatrixEntry" | "answerTrap" | "questionDimension" | "subject" | "textbook" | "topic" | "classroom" | "student" | "assessmentSession" | "response" | "bktState" | "dimensionScore" | "traversalEvent" | "reviewFlag" | "setting" | "adminUser" | "adminAuditLog"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -943,6 +944,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.SubjectCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.SubjectCountAggregateOutputType> | number
+        }
+      }
+    }
+    Textbook: {
+      payload: Prisma.$TextbookPayload<ExtArgs>
+      fields: Prisma.TextbookFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.TextbookFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TextbookPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.TextbookFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TextbookPayload>
+        }
+        findFirst: {
+          args: Prisma.TextbookFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TextbookPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.TextbookFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TextbookPayload>
+        }
+        findMany: {
+          args: Prisma.TextbookFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TextbookPayload>[]
+        }
+        create: {
+          args: Prisma.TextbookCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TextbookPayload>
+        }
+        createMany: {
+          args: Prisma.TextbookCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.TextbookCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TextbookPayload>[]
+        }
+        delete: {
+          args: Prisma.TextbookDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TextbookPayload>
+        }
+        update: {
+          args: Prisma.TextbookUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TextbookPayload>
+        }
+        deleteMany: {
+          args: Prisma.TextbookDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.TextbookUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.TextbookUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TextbookPayload>[]
+        }
+        upsert: {
+          args: Prisma.TextbookUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TextbookPayload>
+        }
+        aggregate: {
+          args: Prisma.TextbookAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTextbook>
+        }
+        groupBy: {
+          args: Prisma.TextbookGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TextbookGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.TextbookCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TextbookCountAggregateOutputType> | number
         }
       }
     }
@@ -1963,6 +2038,18 @@ export const SubjectScalarFieldEnum = {
 export type SubjectScalarFieldEnum = (typeof SubjectScalarFieldEnum)[keyof typeof SubjectScalarFieldEnum]
 
 
+export const TextbookScalarFieldEnum = {
+  textbookId: 'textbookId',
+  subjectId: 'subjectId',
+  grade: 'grade',
+  name: 'name',
+  order: 'order',
+  createdAt: 'createdAt'
+} as const
+
+export type TextbookScalarFieldEnum = (typeof TextbookScalarFieldEnum)[keyof typeof TextbookScalarFieldEnum]
+
+
 export const TopicScalarFieldEnum = {
   topicId: 'topicId',
   subjectId: 'subjectId',
@@ -2282,6 +2369,7 @@ export type GlobalOmitConfig = {
   answerTrap?: Prisma.AnswerTrapOmit
   questionDimension?: Prisma.QuestionDimensionOmit
   subject?: Prisma.SubjectOmit
+  textbook?: Prisma.TextbookOmit
   topic?: Prisma.TopicOmit
   classroom?: Prisma.ClassroomOmit
   student?: Prisma.StudentOmit

@@ -21,6 +21,7 @@ SCHEMA_ORDER = [
     "question_dimensions",
     "subjects",
     "topics",
+    "textbooks",
     "classrooms",
     "students",
     "sessions",
@@ -43,6 +44,7 @@ SEED_ORDER = [
     "question_dimensions",
     "subjects",
     "topics",
+    "textbooks",
     "settings",
     "admin_users",
 ]
