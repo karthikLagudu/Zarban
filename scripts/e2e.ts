@@ -273,6 +273,11 @@ async function main() {
   check(analytics.status === 200 && Array.isArray(analytics.json.trapDistribution), "cohort analytics");
   const adminQ = await admin.get("/api/admin/questions?page=1&page_size=5");
   check(adminQ.status === 200 && adminQ.json.total > 0, `question bank (${adminQ.json?.total} questions)`);
+  const adminSyl = await admin.get("/api/admin/syllabus");
+  check(
+    adminSyl.status === 200 && Array.isArray(adminSyl.json.grades) && adminSyl.json.grades.length >= 5,
+    `syllabus in the admin console (${adminSyl.json?.grades?.length} grades)`
+  );
 
   section("4b · Admin Control Center — users, maintenance, audit");
   const usersList = await admin.get("/api/admin/users");
@@ -534,7 +539,9 @@ async function main() {
   const vCurriculum = await viewer.get("/api/content/curriculum");
   check(vCurriculum.status === 403, "viewer cannot access the curriculum editor (403)");
   const vSyllabus = await viewer.get("/api/content/syllabus");
-  check(vSyllabus.status === 403, "viewer cannot access the syllabus (403)");
+  check(vSyllabus.status === 403, "viewer cannot access the content-studio syllabus editor (403)");
+  const vAdminSyl = await viewer.get("/api/admin/syllabus");
+  check(vAdminSyl.status === 200, "viewer CAN read the syllabus in the admin console (200)");
   const vSkillCreate = await viewer.post("/api/content/skills", { skillId: "S_901", skillName: "nope" });
   check(vSkillCreate.status === 403, "viewer cannot create content (403)");
   const vUsers = await viewer.get("/api/admin/users");

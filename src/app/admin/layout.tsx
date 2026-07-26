@@ -10,6 +10,7 @@ import {
   ChartLine,
   FileSpreadsheet,
   GraduationCap,
+  Layers,
   LayoutDashboard,
   LayoutGrid,
   Library,
@@ -52,6 +53,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/admin/classrooms", label: "Classrooms", icon: School },
       { href: "/admin/analytics", label: "Cohort Analytics", icon: ChartLine },
       { href: "/admin/questions", label: "Question Bank", icon: Library },
+      { href: "/admin/syllabus", label: "Syllabus", icon: Layers },
     ],
   },
   {
