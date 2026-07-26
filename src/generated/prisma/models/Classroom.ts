@@ -401,10 +401,6 @@ export type ClassroomOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
-export type DateTimeFieldUpdateOperationsInput = {
-  set?: Date | string
-}
-
 export type ClassroomCreateNestedOneWithoutStudentsInput = {
   create?: Prisma.XOR<Prisma.ClassroomCreateWithoutStudentsInput, Prisma.ClassroomUncheckedCreateWithoutStudentsInput>
   connectOrCreate?: Prisma.ClassroomCreateOrConnectWithoutStudentsInput

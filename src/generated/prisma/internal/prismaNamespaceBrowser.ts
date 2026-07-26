@@ -55,6 +55,8 @@ export const ModelName = {
   QMatrixEntry: 'QMatrixEntry',
   AnswerTrap: 'AnswerTrap',
   QuestionDimension: 'QuestionDimension',
+  Subject: 'Subject',
+  Topic: 'Topic',
   Classroom: 'Classroom',
   Student: 'Student',
   AssessmentSession: 'AssessmentSession',
@@ -162,6 +164,29 @@ export const QuestionDimensionScalarFieldEnum = {
 } as const
 
 export type QuestionDimensionScalarFieldEnum = (typeof QuestionDimensionScalarFieldEnum)[keyof typeof QuestionDimensionScalarFieldEnum]
+
+
+export const SubjectScalarFieldEnum = {
+  subjectId: 'subjectId',
+  name: 'name',
+  order: 'order',
+  createdAt: 'createdAt'
+} as const
+
+export type SubjectScalarFieldEnum = (typeof SubjectScalarFieldEnum)[keyof typeof SubjectScalarFieldEnum]
+
+
+export const TopicScalarFieldEnum = {
+  topicId: 'topicId',
+  subjectId: 'subjectId',
+  grade: 'grade',
+  name: 'name',
+  chapterNo: 'chapterNo',
+  order: 'order',
+  createdAt: 'createdAt'
+} as const
+
+export type TopicScalarFieldEnum = (typeof TopicScalarFieldEnum)[keyof typeof TopicScalarFieldEnum]
 
 
 export const ClassroomScalarFieldEnum = {

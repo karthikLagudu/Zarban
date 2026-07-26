@@ -48,6 +48,16 @@ export type AnswerTrap = Prisma.AnswerTrapModel
  */
 export type QuestionDimension = Prisma.QuestionDimensionModel
 /**
+ * Model Subject
+ * 
+ */
+export type Subject = Prisma.SubjectModel
+/**
+ * Model Topic
+ * 
+ */
+export type Topic = Prisma.TopicModel
+/**
  * Model Classroom
  * 
  */

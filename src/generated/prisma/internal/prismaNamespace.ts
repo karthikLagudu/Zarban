@@ -396,6 +396,8 @@ export const ModelName = {
   QMatrixEntry: 'QMatrixEntry',
   AnswerTrap: 'AnswerTrap',
   QuestionDimension: 'QuestionDimension',
+  Subject: 'Subject',
+  Topic: 'Topic',
   Classroom: 'Classroom',
   Student: 'Student',
   AssessmentSession: 'AssessmentSession',
@@ -422,7 +424,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "skill" | "knowledgeGraphEdge" | "question" | "qMatrixEntry" | "answerTrap" | "questionDimension" | "classroom" | "student" | "assessmentSession" | "response" | "bktState" | "dimensionScore" | "traversalEvent" | "reviewFlag" | "setting" | "adminUser" | "adminAuditLog"
+    modelProps: "skill" | "knowledgeGraphEdge" | "question" | "qMatrixEntry" | "answerTrap" | "questionDimension" | "subject" | "topic" | "classroom" | "student" | "assessmentSession" | "response" | "bktState" | "dimensionScore" | "traversalEvent" | "reviewFlag" | "setting" | "adminUser" | "adminAuditLog"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -867,6 +869,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.QuestionDimensionCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.QuestionDimensionCountAggregateOutputType> | number
+        }
+      }
+    }
+    Subject: {
+      payload: Prisma.$SubjectPayload<ExtArgs>
+      fields: Prisma.SubjectFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.SubjectFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubjectPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.SubjectFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubjectPayload>
+        }
+        findFirst: {
+          args: Prisma.SubjectFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubjectPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.SubjectFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubjectPayload>
+        }
+        findMany: {
+          args: Prisma.SubjectFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubjectPayload>[]
+        }
+        create: {
+          args: Prisma.SubjectCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubjectPayload>
+        }
+        createMany: {
+          args: Prisma.SubjectCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.SubjectCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubjectPayload>[]
+        }
+        delete: {
+          args: Prisma.SubjectDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubjectPayload>
+        }
+        update: {
+          args: Prisma.SubjectUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubjectPayload>
+        }
+        deleteMany: {
+          args: Prisma.SubjectDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.SubjectUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.SubjectUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubjectPayload>[]
+        }
+        upsert: {
+          args: Prisma.SubjectUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubjectPayload>
+        }
+        aggregate: {
+          args: Prisma.SubjectAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSubject>
+        }
+        groupBy: {
+          args: Prisma.SubjectGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SubjectGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.SubjectCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SubjectCountAggregateOutputType> | number
+        }
+      }
+    }
+    Topic: {
+      payload: Prisma.$TopicPayload<ExtArgs>
+      fields: Prisma.TopicFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.TopicFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TopicPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.TopicFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TopicPayload>
+        }
+        findFirst: {
+          args: Prisma.TopicFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TopicPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.TopicFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TopicPayload>
+        }
+        findMany: {
+          args: Prisma.TopicFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TopicPayload>[]
+        }
+        create: {
+          args: Prisma.TopicCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TopicPayload>
+        }
+        createMany: {
+          args: Prisma.TopicCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.TopicCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TopicPayload>[]
+        }
+        delete: {
+          args: Prisma.TopicDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TopicPayload>
+        }
+        update: {
+          args: Prisma.TopicUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TopicPayload>
+        }
+        deleteMany: {
+          args: Prisma.TopicDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.TopicUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.TopicUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TopicPayload>[]
+        }
+        upsert: {
+          args: Prisma.TopicUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TopicPayload>
+        }
+        aggregate: {
+          args: Prisma.TopicAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTopic>
+        }
+        groupBy: {
+          args: Prisma.TopicGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TopicGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.TopicCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TopicCountAggregateOutputType> | number
         }
       }
     }
@@ -1803,6 +1953,29 @@ export const QuestionDimensionScalarFieldEnum = {
 export type QuestionDimensionScalarFieldEnum = (typeof QuestionDimensionScalarFieldEnum)[keyof typeof QuestionDimensionScalarFieldEnum]
 
 
+export const SubjectScalarFieldEnum = {
+  subjectId: 'subjectId',
+  name: 'name',
+  order: 'order',
+  createdAt: 'createdAt'
+} as const
+
+export type SubjectScalarFieldEnum = (typeof SubjectScalarFieldEnum)[keyof typeof SubjectScalarFieldEnum]
+
+
+export const TopicScalarFieldEnum = {
+  topicId: 'topicId',
+  subjectId: 'subjectId',
+  grade: 'grade',
+  name: 'name',
+  chapterNo: 'chapterNo',
+  order: 'order',
+  createdAt: 'createdAt'
+} as const
+
+export type TopicScalarFieldEnum = (typeof TopicScalarFieldEnum)[keyof typeof TopicScalarFieldEnum]
+
+
 export const ClassroomScalarFieldEnum = {
   classroomId: 'classroomId',
   name: 'name',
@@ -2108,6 +2281,8 @@ export type GlobalOmitConfig = {
   qMatrixEntry?: Prisma.QMatrixEntryOmit
   answerTrap?: Prisma.AnswerTrapOmit
   questionDimension?: Prisma.QuestionDimensionOmit
+  subject?: Prisma.SubjectOmit
+  topic?: Prisma.TopicOmit
   classroom?: Prisma.ClassroomOmit
   student?: Prisma.StudentOmit
   assessmentSession?: Prisma.AssessmentSessionOmit

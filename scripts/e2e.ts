@@ -480,12 +480,38 @@ async function main() {
     "content export returns a workbook"
   );
 
+  // NCERT curriculum catalog.
+  const curriculum = await editor.get("/api/content/curriculum");
+  check(
+    curriculum.status === 200 && Array.isArray(curriculum.json.subjects) && curriculum.json.subjects.length >= 4,
+    `curriculum lists subjects (${curriculum.json?.subjects?.length})`
+  );
+  const maths = curriculum.json.subjects.find((s: any) => s.name === "Mathematics");
+  check(!!maths && maths.topics.length > 0, `Mathematics has topics (${maths?.topics?.length})`);
+  check(
+    maths?.topics?.some((t: any) => t.grade === 10 && /Trigonometry/i.test(t.name)),
+    "curriculum includes Grade 10 Trigonometry"
+  );
+  const mkSubject = await editor.post("/api/content/curriculum", { name: "E2E Subject" });
+  check(mkSubject.status === 201, "editor creates a subject");
+  const subjId = mkSubject.json?.subject?.subjectId;
+  const mkTopic = await editor.post("/api/content/curriculum/topics", {
+    subjectId: subjId, grade: 7, name: "E2E Topic",
+  });
+  check(mkTopic.status === 201 && mkTopic.json.topic?.chapterNo === 1, "editor adds a topic to a subject");
+  const delTopic = await editor.del(`/api/content/curriculum/topics/${mkTopic.json.topic.topicId}`);
+  check(delTopic.status === 200, "editor deletes a topic");
+  const delSubject = await editor.del(`/api/content/curriculum/subjects/${subjId}`);
+  check(delSubject.status === 200, "editor deletes a subject");
+
   section("6 · Cross-role denial");
   const viewer = new Client();
   const vLogin = await viewer.post("/api/admin/auth/login", { email: "viewer@zarban.local", password: "viewer123" });
   check(vLogin.status === 200 && vLogin.json?.user?.role === "Viewer", "viewer logs in");
   const vContent = await viewer.get("/api/content/overview");
   check(vContent.status === 403, "viewer is denied content authoring (403)");
+  const vCurriculum = await viewer.get("/api/content/curriculum");
+  check(vCurriculum.status === 403, "viewer cannot access the curriculum editor (403)");
   const vSkillCreate = await viewer.post("/api/content/skills", { skillId: "S_901", skillName: "nope" });
   check(vSkillCreate.status === 403, "viewer cannot create content (403)");
   const vUsers = await viewer.get("/api/admin/users");

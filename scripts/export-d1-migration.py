@@ -19,6 +19,8 @@ SCHEMA_ORDER = [
     "q_matrix",
     "answer_traps",
     "question_dimensions",
+    "subjects",
+    "topics",
     "classrooms",
     "students",
     "sessions",
@@ -39,6 +41,8 @@ SEED_ORDER = [
     "q_matrix",
     "answer_traps",
     "question_dimensions",
+    "subjects",
+    "topics",
     "settings",
     "admin_users",
 ]

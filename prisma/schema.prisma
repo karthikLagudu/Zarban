@@ -135,6 +135,35 @@ model QuestionDimension {
   @@map("question_dimensions")
 }
 
+// ── NCERT curriculum catalog (Subject → Topic, grades 6–10) ─────────────────
+// A browsable/editable curriculum map, separate from the assessable math
+// `Skill` table that drives the adaptive engine.
+model Subject {
+  subjectId String   @id @default(uuid()) @map("subject_id")
+  name      String   @unique
+  order     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  topics Topic[]
+
+  @@map("subjects")
+}
+
+model Topic {
+  topicId   String   @id @default(uuid()) @map("topic_id")
+  subjectId String   @map("subject_id")
+  grade     Int
+  name      String
+  chapterNo Int?     @map("chapter_no")
+  order     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  subject Subject @relation(fields: [subjectId], references: [subjectId], onDelete: Cascade)
+
+  @@index([subjectId, grade])
+  @@map("topics")
+}
+
 // ── Classrooms (admin-managed rosters, optionally owned by a teacher) ────────
 model Classroom {
   classroomId String   @id @default(uuid()) @map("classroom_id")

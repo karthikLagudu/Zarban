@@ -7,6 +7,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
+  BookMarked,
   BookOpen,
   Boxes,
   FileSpreadsheet,
@@ -19,6 +20,7 @@ import { ContentContext, type ContentUser } from "./content-context";
 
 const NAV = [
   { href: "/content", label: "Overview", icon: LayoutGrid, exact: true },
+  { href: "/content/curriculum", label: "Curriculum", icon: BookMarked },
   { href: "/content/skills", label: "Skills & Graph", icon: Network },
   { href: "/content/questions", label: "Questions", icon: LibraryBig },
   { href: "/content/import", label: "Import / Export", icon: FileSpreadsheet },
