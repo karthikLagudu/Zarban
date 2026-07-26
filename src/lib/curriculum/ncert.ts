@@ -283,11 +283,15 @@ const english: SeedTopic[] = [
   { grade: 10, name: "Grammar and Writing Skills" },
 ];
 
+// Hindi & Sanskrit are catalogued at the textbook level (see NCERT_TEXTBOOKS
+// below); their chapter lists are left to be filled in per edition.
 export const NCERT_CURRICULUM: SeedSubject[] = [
   { name: "Mathematics", topics: mathematics },
   { name: "Science", topics: science },
   { name: "Social Science", topics: socialScience },
   { name: "English", topics: english },
+  { name: "Hindi", topics: [] },
+  { name: "Sanskrit", topics: [] },
 ];
 
 // ── NCERT textbooks, per subject per grade (in order) ───────────────────────
@@ -332,4 +336,34 @@ export const NCERT_TEXTBOOKS: SeedTextbook[] = [
   { subject: "Social Science", grade: 10, name: "Contemporary India – II (Geography)" },
   { subject: "Social Science", grade: 10, name: "Democratic Politics – II (Political Science)" },
   { subject: "Social Science", grade: 10, name: "Understanding Economic Development (Economics)" },
+  // Hindi — main reader (Vasant / Kshitij), workbook (Durva / Kritika), and
+  // supplementary readers per grade.
+  { subject: "Hindi", grade: 6, name: "Vasant Bhag 1" },
+  { subject: "Hindi", grade: 6, name: "Durva Bhag 1" },
+  { subject: "Hindi", grade: 6, name: "Bal Ram Katha" },
+  { subject: "Hindi", grade: 7, name: "Vasant Bhag 2" },
+  { subject: "Hindi", grade: 7, name: "Durva Bhag 2" },
+  { subject: "Hindi", grade: 7, name: "Bal Mahabharat Katha" },
+  { subject: "Hindi", grade: 8, name: "Vasant Bhag 3" },
+  { subject: "Hindi", grade: 8, name: "Durva Bhag 3" },
+  { subject: "Hindi", grade: 8, name: "Bharat ki Khoj" },
+  { subject: "Hindi", grade: 8, name: "Sanshipt Budhcharit" },
+  { subject: "Hindi", grade: 9, name: "Kshitij Bhag 1" },
+  { subject: "Hindi", grade: 9, name: "Kritika Bhag 1" },
+  { subject: "Hindi", grade: 9, name: "Sparsh Bhag 1" },
+  { subject: "Hindi", grade: 9, name: "Sanchayan Bhag 1" },
+  { subject: "Hindi", grade: 10, name: "Kshitij Bhag 2" },
+  { subject: "Hindi", grade: 10, name: "Kritika Bhag 2" },
+  { subject: "Hindi", grade: 10, name: "Sparsh Bhag 2" },
+  { subject: "Hindi", grade: 10, name: "Sanchayan Bhag 2" },
+  // Sanskrit — Ruchira (6–8), and Shemushi + workbooks (9–10).
+  { subject: "Sanskrit", grade: 6, name: "Ruchira Bhag 1" },
+  { subject: "Sanskrit", grade: 7, name: "Ruchira Bhag 2" },
+  { subject: "Sanskrit", grade: 8, name: "Ruchira Bhag 3" },
+  { subject: "Sanskrit", grade: 9, name: "Shemushi Bhag 1" },
+  { subject: "Sanskrit", grade: 9, name: "Abhyaswan Sanskritam Bhag 1" },
+  { subject: "Sanskrit", grade: 9, name: "Vyakaranavithi" },
+  { subject: "Sanskrit", grade: 10, name: "Shemushi Bhag 2" },
+  { subject: "Sanskrit", grade: 10, name: "Abhyaswan Sanskritam Bhag 2" },
+  { subject: "Sanskrit", grade: 10, name: "Vyakaranavithi" },
 ];
