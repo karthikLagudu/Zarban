@@ -1,127 +1,226 @@
-# Zarban — Adaptive Math Assessment Tool
+<div align="center">
 
-A production-grade adaptive math diagnostic platform for Indian school students
-(Grades 5–10, NCERT-aligned). It orchestrates **CAT + IRT**, **CDM (Q-Matrix +
-Answer Traps)**, **BKT**, **DKT-lite** and the **Twin Question diagnostic**
-into a single next-question-selection engine, driven entirely by a 5-sheet
-Excel SME workbook.
+![Zarban — Adaptive Math Assessment](docs/og.png)
 
-## Quick start
+# Zarban
+
+### An adaptive math assessment & learning platform for Grades 5–10, NCERT-aligned
+
+Zarban runs a genuine multi-algorithm diagnostic — **CAT + IRT**, **CDM**, **BKT**,
+**DKT-lite** and a **Twin-Question probe** — to find not just *what* a student got
+wrong, but *why*, and turns it into a learning loop for students, a monitoring
+console for teachers, and full control for admins.
+
+<br/>
+
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-6-2D3748?style=flat-square&logo=prisma&logoColor=white)
+![Cloudflare](https://img.shields.io/badge/Cloudflare_Workers_+_D1-F38020?style=flat-square&logo=cloudflare&logoColor=white)
+![Tests](https://img.shields.io/badge/tests-39_unit_·_132_e2e-3fb950?style=flat-square&logo=vitest&logoColor=white)
+
+</div>
+
+---
+
+## ✨ Highlights
+
+Zarban is an end-to-end LMS built around one adaptive engine, serving three roles:
+
+| 🎓 Students | 🧑‍🏫 Teachers | 🛠️ Admins |
+|---|---|---|
+| Adaptive assessment that adjusts to every answer | **My Classes** monitoring dashboard | **Control Center**: users, roles, audit log |
+| A diagnostic **report** — mastery, 5 learning dimensions, root-cause | Flags students needing attention (low score, skill gaps, rushing) | Danger-zone data maintenance (typed-confirm) |
+| **My Learning** hub — score trend, mastery, what to practise next | Own classrooms; per-student attention reasons | **Curriculum** + **Syllabus** editors, NCERT textbooks by grade |
+| PDF report export | Drill into any student, replay any session | **Content Studio**: questions, skills, Q-matrix, traps |
+
+**Extras that make it feel real:** lucky-guess (fluke) & rushed-answer detection,
+foundational-gap chains, reading-vs-math gap diagnosis, session replay, cohort
+analytics, Excel import/export of the whole question bank, and a full RBAC model.
+
+---
+
+## 🧠 The adaptive engine
+
+Every response updates the student model *before* the next question is chosen.
+Five techniques cooperate in one closed-form TypeScript engine — no external ML
+service required.
+
+```mermaid
+flowchart TD
+    A["Start · pick grade"] --> B["Serve best question at ability θ<br/>(max-information CAT selection)"]
+    B --> C{"Answer"}
+    C -->|correct| D["BKT mastery ↑ · IRT re-estimates θ"]
+    C -->|wrong| E["CDM classifies the trap<br/>(sign / concept / calculation / reading …)"]
+    D --> F{"Twin probe?<br/>confirm a lucky guess"}
+    E --> G["Route: same level ·<br/>step down a grade ·<br/>walk to a prerequisite skill"]
+    F --> H{"Mastery reached?<br/>topics covered?<br/>question cap hit?"}
+    G --> H
+    H -->|no| B
+    H -->|yes| I["Diagnostic report<br/>+ recommendations"]
+```
+
+| Technique | File | What it does |
+|---|---|---|
+| **CAT + IRT (3PL)** | `src/lib/engine/irt.ts` | `P(θ)=c+(1−c)/(1+e^(−a(θ−b)))`; Newton–Raphson MLE re-estimates ability θ∈[−4,4] over session history; questions chosen by maximum information. |
+| **BKT** | `src/lib/engine/bkt.ts` | Exact Bayesian mastery update per skill (P(L₀)=.10, P(T)=.3, P(G)=.2, P(S)=.1); mastery ≥ .95, foundational gap ≤ .30. |
+| **CDM** | Q-matrix + answer traps | Each wrong option maps to a specific misconception and a remedial route. |
+| **DKT-lite** | `src/lib/engine/orchestrator.ts` | Sequence-aware routing across the prerequisite knowledge graph. |
+| **Twin Question** | orchestrator | A parallel probe confirms whether a correct answer was mastery or a lucky guess. |
+
+---
+
+## 🏗️ Architecture
+
+```mermaid
+flowchart LR
+    subgraph Browser
+      direction TB
+      ST["Student site<br/>/ · /assessment · /report · /learn"]
+      AD["Admin console<br/>/admin/*"]
+      CS["Content Studio<br/>/content/*"]
+    end
+    Browser -->|HTTP| API["Next.js App Router<br/>API routes (/api/*)"]
+    API --> ENG["Adaptive engine<br/>IRT · BKT · CDM · DKT · Twin"]
+    API --> AUTH["RBAC<br/>JWT cookie + bcrypt"]
+    ENG --> ORM["Prisma ORM"]
+    API --> ORM
+    ORM --> D1[("Cloudflare D1<br/>(SQLite-compatible)")]
+```
+
+| Layer | Choice |
+|---|---|
+| Frontend + API | Next.js 16 (App Router) · TypeScript · Tailwind CSS 4 · Recharts · lucide-react |
+| Runtime / deploy | **Cloudflare Workers** via `vinext` + `wrangler` |
+| Engine | Pure TypeScript (`src/lib/engine/`) — closed-form math, single process |
+| Database | **Prisma** ORM → **Cloudflare D1** (SQLite-compatible; schema is Postgres-portable) |
+| Auth | bcrypt + signed JWT cookie (`jose`); roles: Admin · Teacher · Viewer · Editor |
+| Content pipeline | SheetJS (`xlsx`) — the same parser powers import, export and the seed |
+
+---
+
+## 🔐 Roles & access
+
+```mermaid
+flowchart TD
+    Admin["👑 Admin — full control"] --> Teacher["🧑‍🏫 Teacher — dashboards, my classes"]
+    Teacher --> Viewer["👀 Viewer — read-only analytics"]
+    Admin --> Editor["✍️ Editor — Content Studio + Curriculum"]
+```
+
+- **Admin** — everything: analytics, classrooms, **User Access**, **System & Audit**, settings, Content Studio, Syllabus/Curriculum.
+- **Teacher** — dashboards, students, cohort analytics, and a **My Classes** monitoring view for classrooms they own.
+- **Viewer** — read-only analytics and syllabus.
+- **Editor** — Content Studio + Curriculum authoring (no analytics).
+
+---
+
+## 📚 Curriculum & Syllabus (NCERT)
+
+A browsable, editable catalog separate from the assessable question bank:
+
+- **4 subjects · 239 topics · 37 textbooks** across Grades 6–10 (Mathematics, Science, Social Science, English).
+- **Syllabus** space — NCERT textbooks laid out grade-by-grade, each with a **soft-copy link** to the official free NCERT PDF (editable per book).
+- **Curriculum** editor — subjects → chapters, fully editable.
+
+> The seed follows the well-known NCERT chapter/textbook lists and is fully editable — verify against the exact edition your school uses.
+
+---
+
+## 🚀 Quick start
 
 ```bash
 npm install
-npm run setup      # db:push + generate the SME workbook + seed everything
+npm run setup          # db push + generate the SME workbook + verify + seed
 
-# Recommended — fast production server:
+# Fast production server (recommended):
 npm run build && npm start        # http://localhost:3000
 
-# Or the dev server (hot reload, but each page compiles on first visit):
+# Or hot-reload dev:
 npm run dev
 ```
 
-- **Student flow:** `/` → pick name + grade → adaptive assessment → `/report/:sessionId`
-- **Admin dashboard** (analytics): `/admin`
-  - `admin@zarban.local` / `admin123` (Admin)
-  - `teacher@zarban.local` / `teacher123` (Teacher)
-  - `viewer@zarban.local` / `viewer123` (Viewer)
-- **Content Studio** (authoring): `/content`
-  - `editor@zarban.local` / `editor123` (Editor) — or any Admin
-  - Manage skills + the knowledge graph, author questions with options, learning
-    dimensions, Q-matrix skills and per-option misconception traps, see a content
-    health/coverage dashboard, and round-trip the whole bank via Excel import/export.
+**Try it:**
+
+| Surface | URL | Sign in |
+|---|---|---|
+| Student | `/` → name + grade → assessment → `/report/:id` | — |
+| My Learning | `/learn` | (progress on this device) |
+| Admin console | `/admin` | `admin@zarban.local` / `admin123` |
+| Teacher | `/admin` | `teacher@zarban.local` / `teacher123` |
+| Content Studio | `/content` | `editor@zarban.local` / `editor123` |
+
+> ⚠️ These are seeded dev credentials — set a real `AUTH_SECRET` and rotate passwords (**User Access**) before going live.
+
+---
+
+## 🧪 Testing
 
 ```bash
-npm test           # engine unit tests (BKT/IRT/CAT math)
+npm test           # 39 engine unit tests (BKT / IRT / CAT / difficulty)
 npm run typecheck  # strict TypeScript
+npm run e2e        # 132-check end-to-end suite (needs the dev server running)
 npm run build      # production build
 ```
 
-## Architecture
+The **end-to-end suite** drives the running server through its real HTTP API and
+asserts the whole platform: student lifecycle (all-correct & all-wrong), the
+report + detailed analysis, fluke/rushed detection, the learning hub, admin auth
+& RBAC, classrooms + teacher monitoring, the curriculum/syllabus, content-portal
+CRUD, and cross-role denial.
 
-| Layer | Choice | Notes |
-|---|---|---|
-| Frontend + API | Next.js 15 (App Router), TypeScript, Tailwind CSS 4, Recharts | single deployable app |
-| Algorithm engine | Pure TypeScript in `src/lib/engine/` | closed-form math; no external service needed (the spec's Python/FastAPI split is an option, not a requirement — this keeps the whole system one process) |
-| Database | Prisma ORM on **SQLite** locally | schema is PostgreSQL-compatible: switch `provider` in `prisma/schema.prisma` to `postgresql` and set `DATABASE_URL` |
-| Excel | SheetJS (`xlsx`) | same parser used by the admin import API and the seed script |
-| Auth | bcrypt + signed JWT cookie (`jose`) | RBAC: Admin > Teacher > Viewer |
+---
 
-### Engine (`src/lib/engine/`)
+## 🗂️ Data model (core)
 
-- **`irt.ts`** — 3PL model `P(θ) = c + (1-c)/(1+exp(-a(θ-b)))`, Newton–Raphson
-  MLE θ re-estimation over the session history, θ clamped to [−4, 4]. Item
-  parameters are derived from grade + difficulty band on import.
-- **`bkt.ts`** — exact Bayesian update (P(L0)=0.10, P(T)=0.3, P(G)=0.2,
-  P(S)=0.1). Mastery ≥ 0.95, foundational gap ≤ 0.30.
-- **`orchestrator.ts`** — the master loop (spec Part 3). One deliberate fix to
-  the spec pseudocode: BKT/IRT updates run on **every** response *before*
-  routing (the spec's prose requires this; its pseudocode returned early on
-  wrong answers).
-- **`fetch-question.ts`** — no-repeat guarantee + fallback ladder: exact
-  {skill, grade, band} → nearest band → nearest grade; prefers primary-skill
-  questions and never serves a reserved equation twin while alternatives exist.
-- **`report.ts`** — Part 8 report generation: skill mastery map, error
-  taxonomy, dimension scores, grade-equivalent level, reading-vs-math gap,
-  foundational gap chains, templated narrative, focus areas.
+```mermaid
+erDiagram
+    ADMINUSER ||--o{ CLASSROOM : teaches
+    CLASSROOM ||--o{ STUDENT : enrolls
+    STUDENT   ||--o{ SESSION : takes
+    SESSION   ||--o{ RESPONSE : records
+    QUESTION  ||--o{ RESPONSE : answered_as
+    SKILL     ||--o{ QUESTION : primary
+    SKILL     ||--o{ BKTSTATE : mastery
+    STUDENT   ||--o{ BKTSTATE : tracks
+    SUBJECT   ||--o{ TOPIC : contains
+    SUBJECT   ||--o{ TEXTBOOK : has
+```
 
-Routing decisions are recorded per response (`engine_decision`) for Session
-Replay. Key decisions you'll see: `lucky_guess_confirmation`,
-`streak_escalate_difficulty`, `mastered_next_topic`, `twin_probe`,
-`reading_error_flag_continue`, `cdm_serve_same_level`, `cdm_go_down_grade`,
-`prereq_traversal_*`, `gap_confirmed_return_next_topic`,
-`session_end_{all_topics_visited|max_questions_reached|all_skills_mastered}`.
+---
 
-### Data (`data/Adaptive_Math_SME_Template_v3_FILLED.xlsx`)
+## 📁 Project structure
 
-Generated by `npm run generate:workbook` (deterministic, seeded PRNG) and gated
-by `npm run verify:workbook`:
+```
+src/
+  app/
+    (student)         /  · /assessment · /report/[id] · /learn
+    admin/            dashboard · students · classrooms · analytics ·
+                      questions · syllabus · users · system · settings
+    content/          overview · syllabus · curriculum · skills · questions · import
+    api/              session/* · admin/* · content/* · learn/*
+  lib/
+    engine/           irt · bkt · cdm · dkt · orchestrator · fetch-question · report
+    curriculum/       ncert data · syllabus builder
+    auth.ts  db.ts  audit.ts
+prisma/schema.prisma  drizzle/0000_initial.sql  scripts/  tests/
+```
 
-- **33 skills** (S_001–S_033) forming the NCERT knowledge graph, Grade 10
-  topics chaining down to Grade 5 root nodes
-- **578 questions** (486 model + 92 equation twins; 92 word problems), with
-  every {skill × difficulty} cell holding ≥3 distinct items (avg ~6) so the
-  CAT engine has real choice near each ability level and retakes stay fresh
-- **1,734 answer traps** — every wrong option classified
-  (`Careless_Slip`, `Calculation_Error`, `Concept_Error`, `Sign_Error`,
-  `Procedural_Error`, `Reading_Error`) with misconception text and remedial
-  routing (`serve_same_level`, `go_down_grade`, `go_prereq_skill`,
-  `flag_review`)
-- **Q-Matrix** and **5-dimension tags** on every question
+---
 
-The QA gate (`scripts/verify-workbook.ts`) guarantees: valid import format,
-four distinct non-empty options with a correct answer, a classified trap on
-every wrong option, dimension tags on every question, valid equation twins,
-no exact-duplicate items, and ≥3 items per skill/band. Every computed answer
-is correct by construction (parametric builders place the computed result).
+## ☁️ Deployment
 
-The admin **Question Bank → Excel Import** panel (or **Content Studio →
-Import**) accepts any workbook in this format: validate (detailed row/column
-error report + preview diff) → confirm → bulk upsert.
+Zarban is Cloudflare-native (Workers + D1) and hosts **free** on Cloudflare's free
+plan. See **[DEPLOY.md](DEPLOY.md)** for the full copy-paste guide:
+`wrangler login` → create a free D1 → apply `drizzle/0000_initial.sql` → `wrangler deploy`.
 
-## API contract (spec Part 6)
+A fresh D1 comes up fully seeded (578 questions, curriculum, staff accounts) so
+sign-in works immediately.
 
-- `POST /api/session/start` `{name, school?, email?, grade}` → first question
-- `POST /api/session/respond` `{session_id, question_id, selected_option}` →
-  next step + updated BKT/θ
-- `GET /api/session/report/:sessionId` → full diagnostic report object
-- `POST /api/admin/import?mode=validate|commit` → multipart Excel upload
-- Plus admin endpoints: `stats`, `students`, `students/:id`,
-  `sessions/:id/replay`, `analytics`, `questions` (CRUD), `skills`, `settings`,
-  `auth/{login,logout,me}`
+---
 
-## Edge cases implemented (spec Part 7)
-
-1. Question fetch falls back to nearest band, then nearest grade
-2. Session ends on: all topics visited / max questions (configurable in
-   Settings) / all grade skills mastered
-3. A `question_id` is never served twice in a session
-4. Word problems without an equation twin skip the twin diagnostic
-5. Grade traversal is clamped to 5–10
-6. Imports with missing sheets/columns/FKs are rejected with a row-level report
-
-## Deployment
-
-- **Local / demo:** as-is with SQLite (`.env` → `DATABASE_URL="file:./dev.db"`)
-- **Production:** switch Prisma provider to `postgresql`, set `DATABASE_URL`
-  and a strong `AUTH_SECRET`, then `prisma db push && npm run seed`. Deploy the
-  Next.js app to Vercel/Railway/Render; the DB to any managed Postgres.
+<div align="center">
+<sub>Built with the Claude Agent SDK · Grades 5–10 · NCERT-aligned</sub>
+</div>
