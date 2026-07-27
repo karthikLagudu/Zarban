@@ -10,6 +10,13 @@
 :root {
   --background: #f6f7fb;
   --foreground: #0f172a;
+  /* Brand + focus ring, so keyboard focus is consistent everywhere. */
+  --ring: #6366f1;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent; /* no grey flash on mobile taps */
+  scroll-behavior: smooth;
 }
 
 html,
@@ -18,9 +25,11 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
 
+/* ── Typography ───────────────────────────────────────────────────────────── */
 h1,
 h2,
 h3,
@@ -28,13 +37,53 @@ h3,
   font-family: var(--font-display);
   letter-spacing: -0.02em;
 }
+/* Nicer line breaking: balanced headings, no orphan words in body copy. */
+h1,
+h2,
+h3,
+h4 {
+  text-wrap: balance;
+}
+p {
+  text-wrap: pretty;
+}
+
+/* ── Accessible, consistent keyboard focus ───────────────────────────────────
+   :where() keeps specificity at 0 so component-level styles still win. We hide
+   the default outline on mouse focus and show a crisp ring on keyboard focus. */
+:where(a, button, input, select, textarea, summary, [tabindex], [role="button"]):focus {
+  outline: none;
+}
+:where(a, button, input, select, textarea, summary, [tabindex], [role="button"]):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* ── Form + interactive defaults ─────────────────────────────────────────────*/
+input,
+select,
+textarea {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease,
+    background-color 0.15s ease;
+}
+input::placeholder,
+textarea::placeholder {
+  color: #94a3b8;
+}
+:where(button, [role="button"], a, label, select, summary):where(:not([disabled])) {
+  cursor: pointer;
+}
+[disabled],
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
 
 ::selection {
   background: #c7d2fe;
   color: #1e1b4b;
 }
 
-/* Thin, unobtrusive scrollbars */
+/* Thin, unobtrusive scrollbars that darken slightly on hover */
 * {
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 transparent;
@@ -46,6 +95,9 @@ h3,
 *::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 8px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 *::-webkit-scrollbar-track {
   background: transparent;
@@ -65,6 +117,34 @@ h3,
 .animate-fade-up {
   animation: fade-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.animate-fade-in {
+  animation: fade-in 0.2s ease both;
+}
+
+/* Dialog / popover entrance: a gentle rise + scale. */
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.animate-pop {
+  animation: pop-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 .delay-1 {
   animation-delay: 0.06s;
 }
@@ -113,7 +193,12 @@ h3,
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
   .animate-fade-up,
+  .animate-fade-in,
+  .animate-pop,
   .animate-blob,
   .animate-blob-slow,
   .skeleton {

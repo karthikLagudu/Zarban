@@ -405,11 +405,11 @@ function AddStudentsModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm"
+      className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="animate-fade-up flex max-h-[85vh] w-full max-w-lg flex-col rounded-3xl bg-white p-7 shadow-2xl"
+        className="animate-pop flex max-h-[85vh] w-full max-w-lg flex-col rounded-3xl bg-white p-7 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
