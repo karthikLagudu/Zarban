@@ -248,9 +248,9 @@ const rng = mulberry32(20260717);
 // real choice near each ability level and keeps retakes fresh (the engine
 // soft-avoids items a student has already seen).
 const PLAN: [Band, number][] = [
-  ["easy", 5],
-  ["medium", 6],
-  ["hard", 5],
+  ["easy", 9],
+  ["medium", 11],
+  ["hard", 9],
 ];
 
 // Full-signature de-duplication: within a {skill, band} every emitted item
@@ -271,7 +271,7 @@ function uniqueSpec(skill: SkillDef, band: Band, v: number) {
   const key = `${skill.skill_id}_${band}`;
   const seen = seenItems.get(key) ?? new Set<string>();
   seenItems.set(key, seen);
-  for (let attempt = 0; attempt < 40; attempt++) {
+  for (let attempt = 0; attempt < 80; attempt++) {
     const spec = buildQuestion(skill, band, v + attempt, rng);
     const sig = itemSignature(spec);
     if (!seen.has(sig)) {
