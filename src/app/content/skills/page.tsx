@@ -3,7 +3,8 @@
 // Skills & Knowledge Graph manager — CRUD skills and edit prerequisite edges.
 
 import { useCallback, useEffect, useState } from "react";
-import { Network, Plus, Search } from "lucide-react";
+import { Network, Plus, Search, Share2, Table2 } from "lucide-react";
+import { SkillsGraph } from "./skills-graph";
 
 interface SkillRow {
   skillId: string;
@@ -32,6 +33,23 @@ export default function SkillsPage() {
   const [editing, setEditing] = useState<typeof empty | null>(null);
   const [isNew, setIsNew] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [view, setView] = useState<"graph" | "table">("graph");
+
+  function openEditor(id: string) {
+    const s = skills.find((x) => x.skillId === id);
+    if (!s) return;
+    setEditing({
+      skillId: s.skillId,
+      skillName: s.skillName,
+      gradeLevel: s.gradeLevel ?? "",
+      topicArea: s.topicArea ?? "Algebra",
+      difficultyBand: s.difficultyBand ?? "medium",
+      prerequisiteSkillIds: s.prerequisiteSkillIds,
+      notes: s.notes ?? "",
+    });
+    setIsNew(false);
+    setError(null);
+  }
 
   const load = useCallback(() => {
     fetch("/api/content/skills")
@@ -89,6 +107,24 @@ export default function SkillsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <div className="flex rounded-xl bg-slate-100 p-1 text-sm font-semibold">
+            <button
+              onClick={() => setView("graph")}
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition ${
+                view === "graph" ? "bg-white text-emerald-700 shadow-sm" : "text-slate-500"
+              }`}
+            >
+              <Share2 className="h-4 w-4" /> Graph
+            </button>
+            <button
+              onClick={() => setView("table")}
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition ${
+                view === "table" ? "bg-white text-emerald-700 shadow-sm" : "text-slate-500"
+              }`}
+            >
+              <Table2 className="h-4 w-4" /> Table
+            </button>
+          </div>
           <div className="relative">
             <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
@@ -111,6 +147,9 @@ export default function SkillsPage() {
         </div>
       </div>
 
+      {view === "graph" ? (
+        <SkillsGraph skills={filtered} onEdit={openEditor} />
+      ) : (
       <div className="mt-6 overflow-x-auto rounded-3xl border border-slate-200 bg-white shadow-sm">
         <table className="w-full text-left text-sm">
           <thead>
@@ -177,6 +216,7 @@ export default function SkillsPage() {
           </tbody>
         </table>
       </div>
+      )}
 
       {editing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-6">
