@@ -69,6 +69,7 @@ export async function GET(
     .filter((s) => s.status !== "Mastered" && s.attempts > 0)
     .slice(0, 3)
     .map((s) => ({
+      skillId: s.skillId,
       skillName: s.skillName,
       gradeLevel: s.gradeLevel,
       pMastery: s.pMastery,

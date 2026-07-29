@@ -515,22 +515,27 @@ export default function ReportPage({
           ) : (
             <ol className="mt-5 grid gap-4 sm:grid-cols-3">
               {report.focusAreas.map((f, i) => (
-                <li
-                  key={f.skillId}
-                  className="group rounded-2xl border border-slate-200 bg-gradient-to-b from-slate-50 to-white p-5 transition hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md"
-                >
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 text-xs font-bold text-white shadow">
-                    {i + 1}
-                  </span>
-                  <p className="mt-3 font-semibold text-slate-800">{f.skillName}</p>
-                  <p className="mt-0.5 text-xs text-slate-500">
-                    Grade {f.gradeLevel ?? "?"} · mastery {Math.round(f.pMastery * 100)}%
-                  </p>
-                  {f.ncertReference && (
-                    <p className="mt-2.5 border-t border-dashed border-slate-200 pt-2 text-xs leading-relaxed text-slate-400">
-                      {f.ncertReference}
+                <li key={f.skillId}>
+                  <a
+                    href={`/practice?skill=${encodeURIComponent(f.skillId)}`}
+                    className="group flex h-full flex-col rounded-2xl border border-slate-200 bg-gradient-to-b from-slate-50 to-white p-5 transition hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md"
+                  >
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 text-xs font-bold text-white shadow">
+                      {i + 1}
+                    </span>
+                    <p className="mt-3 font-semibold text-slate-800">{f.skillName}</p>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      Grade {f.gradeLevel ?? "?"} · mastery {Math.round(f.pMastery * 100)}%
                     </p>
-                  )}
+                    {f.ncertReference && (
+                      <p className="mt-2.5 border-t border-dashed border-slate-200 pt-2 text-xs leading-relaxed text-slate-400">
+                        {f.ncertReference}
+                      </p>
+                    )}
+                    <span className="mt-auto flex items-center gap-1 pt-3 text-xs font-semibold text-indigo-600">
+                      <Target className="h-3.5 w-3.5" /> Practise this skill
+                    </span>
+                  </a>
                 </li>
               ))}
             </ol>

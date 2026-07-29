@@ -235,6 +235,26 @@ async function main() {
   const learn404 = await new Client().get("/api/learn/not-a-real-student");
   check(learn404.status === 404, "unknown learner returns 404");
 
+  section("1c · Practice mode (the learning loop)");
+  const pcat = await new Client().get("/api/practice");
+  check(
+    pcat.status === 200 && Array.isArray(pcat.json.skills) && pcat.json.skills.length > 0,
+    `practice catalog lists skills (${pcat.json?.skills?.length})`
+  );
+  const pskill = pcat.json.skills[0].skillId;
+  const pset = await new Client().get(`/api/practice?skill=${pskill}&count=5`);
+  check(
+    pset.status === 200 && Array.isArray(pset.json.questions) && pset.json.questions.length > 0,
+    `practice set built for ${pskill} (${pset.json?.questions?.length} questions)`
+  );
+  check(
+    !!pset.json.questions[0].correctOption &&
+      Object.keys(pset.json.questions[0].traps ?? {}).length > 0,
+    "practice questions carry the answer + misconception explanations"
+  );
+  const p404 = await new Client().get("/api/practice?skill=NOT_A_SKILL");
+  check(p404.status === 404, "unknown practice skill returns 404");
+
   section("2 · Student lifecycle — struggling student (all wrong)");
   await runAssessment("E2E Weak", 9, "all_wrong");
 

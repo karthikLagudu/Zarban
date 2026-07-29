@@ -60,6 +60,7 @@ interface Progress {
     status: string;
   }[];
   recommendations: {
+    skillId: string;
     skillName: string;
     gradeLevel: string | null;
     pMastery: number;
@@ -208,17 +209,25 @@ export default function LearnPage() {
             ) : (
               <ol className="mt-4 space-y-3">
                 {recommendations.map((r, i) => (
-                  <li key={r.skillName} className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3.5 ring-1 ring-slate-100">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 text-xs font-bold text-white">
-                      {i + 1}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-slate-800">{r.skillName}</p>
-                      <p className="text-xs text-slate-400">
-                        {r.topicArea ?? "—"}
-                        {r.gradeLevel ? ` · Grade ${r.gradeLevel}` : ""} · mastery {Math.round(r.pMastery * 100)}%
-                      </p>
-                    </div>
+                  <li key={r.skillId}>
+                    <a
+                      href={`/practice?skill=${encodeURIComponent(r.skillId)}`}
+                      className="group flex items-center gap-3 rounded-2xl bg-slate-50 p-3.5 ring-1 ring-slate-100 transition hover:bg-indigo-50 hover:ring-indigo-200"
+                    >
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 text-xs font-bold text-white">
+                        {i + 1}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-slate-800">{r.skillName}</p>
+                        <p className="text-xs text-slate-400">
+                          {r.topicArea ?? "—"}
+                          {r.gradeLevel ? ` · Grade ${r.gradeLevel}` : ""} · mastery {Math.round(r.pMastery * 100)}%
+                        </p>
+                      </div>
+                      <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-indigo-600 opacity-0 transition group-hover:opacity-100">
+                        Practise <ArrowRight className="h-3.5 w-3.5" />
+                      </span>
+                    </a>
                   </li>
                 ))}
               </ol>
