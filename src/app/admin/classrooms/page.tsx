@@ -113,7 +113,7 @@ export default function ClassroomsPage() {
           </p>
         </div>
       ) : (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        <div className="stagger mt-6 grid gap-4 sm:grid-cols-2">
           {rooms.map((r) => (
             <Link
               key={r.classroomId}

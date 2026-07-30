@@ -53,10 +53,15 @@ export default function ContentLayout({ children }: { children: React.ReactNode 
   if (isLogin) return <>{children}</>;
   if (!checked || !user) {
     return (
-      <main className="flex min-h-screen items-center justify-center">
-        <div className="flex items-center gap-3 text-slate-400">
-          <span className="h-5 w-5 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
-          Checking access…
+      <main className="flex min-h-screen items-center justify-center bg-slate-50/70">
+        <div className="animate-scale-in flex flex-col items-center gap-4">
+          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-200">
+            <Boxes className="h-7 w-7 animate-pulse" />
+          </span>
+          <div className="flex items-center gap-2 text-sm font-medium text-slate-400">
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-400 border-t-transparent" />
+            Opening the studio…
+          </div>
         </div>
       </main>
     );

@@ -206,6 +206,86 @@ textarea::placeholder {
   }
 }
 
+/* Scale-in for cards / popovers */
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.animate-scale-in {
+  animation: scale-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Page transition — a soft cross-fade applied to every admin/content route
+   change via each area's template.tsx, so navigation always feels smooth. */
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-page {
+  animation: page-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Staggered reveal — children rise into place one after another. Add `stagger`
+   to a grid/list container. */
+.stagger > * {
+  animation: fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.stagger > *:nth-child(1) { animation-delay: 0.03s; }
+.stagger > *:nth-child(2) { animation-delay: 0.07s; }
+.stagger > *:nth-child(3) { animation-delay: 0.11s; }
+.stagger > *:nth-child(4) { animation-delay: 0.15s; }
+.stagger > *:nth-child(5) { animation-delay: 0.19s; }
+.stagger > *:nth-child(6) { animation-delay: 0.23s; }
+.stagger > *:nth-child(7) { animation-delay: 0.27s; }
+.stagger > *:nth-child(8) { animation-delay: 0.31s; }
+.stagger > *:nth-child(9) { animation-delay: 0.35s; }
+.stagger > *:nth-child(n + 10) { animation-delay: 0.39s; }
+
+/* Gradient text accent (brand indigo → violet) */
+.text-gradient {
+  background-image: linear-gradient(90deg, #4f46e5, #7c3aed);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Opt-in hover lift with a soft brand-tinted shadow */
+.hover-lift {
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 34px -14px rgba(79, 70, 229, 0.32);
+}
+
+/* Frosted-glass surface */
+.glass {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Reduced motion: also disable the new entrances + stagger */
+@media (prefers-reduced-motion: reduce) {
+  .animate-scale-in,
+  .animate-page,
+  .stagger > * {
+    animation: none;
+  }
+}
+
 /* Dot-grid backdrop used on the marketing-style screens */
 .bg-dot-grid {
   background-image: radial-gradient(circle, #cbd5e1 1px, transparent 1px);

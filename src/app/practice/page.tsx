@@ -161,7 +161,7 @@ function Picker({ catalog, onPick }: { catalog: CatalogSkill[] | null; onPick: (
       {grades.map((g) => (
         <section key={g} className="mt-8">
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">Grade {g}</h2>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="stagger mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {byGrade.get(g)!.map((s) => (
               <button
                 key={s.skillId}

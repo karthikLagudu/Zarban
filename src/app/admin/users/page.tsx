@@ -98,7 +98,7 @@ export default function UsersPage() {
       </div>
 
       {/* Role legend */}
-      <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="stagger mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         {ROLES.map((r) => (
           <div key={r} className="rounded-2xl border border-slate-200 bg-white p-3.5">
             <span className={`rounded-full px-2.5 py-1 text-xs font-bold ring-1 ${ROLE_BADGE[r]}`}>
