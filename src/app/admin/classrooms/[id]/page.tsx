@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { useAdmin } from "../../admin-context";
+import { useEscapeKey } from "@/lib/use-escape";
 
 interface RosterStudent {
   studentId: string;
@@ -340,6 +341,7 @@ function AddStudentsModal({
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  useEscapeKey(onClose);
 
   // New-student form.
   const [name, setName] = useState("");

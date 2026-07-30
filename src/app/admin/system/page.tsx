@@ -14,6 +14,7 @@ import {
   ShieldAlert,
   Trash2,
 } from "lucide-react";
+import { useEscapeKey } from "@/lib/use-escape";
 
 interface Counts {
   students: number;
@@ -262,6 +263,7 @@ function ConfirmModal({
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  useEscapeKey(onClose);
 
   async function run() {
     setBusy(true);

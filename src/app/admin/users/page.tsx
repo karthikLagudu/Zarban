@@ -7,6 +7,7 @@
 import { useEffect, useState } from "react";
 import { KeyRound, Loader2, ShieldCheck, Trash2, UserPlus, X } from "lucide-react";
 import { useAdmin } from "../admin-context";
+import { useEscapeKey } from "@/lib/use-escape";
 
 type Role = "Admin" | "Teacher" | "Viewer" | "Editor";
 const ROLES: Role[] = ["Admin", "Teacher", "Viewer", "Editor"];
@@ -387,6 +388,7 @@ function Modal({
   onClose: () => void;
   children: React.ReactNode;
 }) {
+  useEscapeKey(onClose);
   return (
     <div
       className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm"

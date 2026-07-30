@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AlertTriangle, ArrowRight, Loader2, Plus, School, UserRound, Users, X } from "lucide-react";
 import { useAdmin } from "../admin-context";
+import { useEscapeKey } from "@/lib/use-escape";
 
 interface Classroom {
   classroomId: string;
@@ -180,6 +181,7 @@ function CreateModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
   const [teachers, setTeachers] = useState<{ id: number; name: string | null; email: string; role: string }[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  useEscapeKey(onClose);
 
   useEffect(() => {
     fetch("/api/admin/users")

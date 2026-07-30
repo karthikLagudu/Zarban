@@ -220,6 +220,35 @@ function Runner({ payload, onExit }: { payload: PayLoad; onExit: () => void }) {
     setRevealed(false);
   }
 
+  // Keyboard: 1–4 or A–D to choose, Enter to check, then Enter for the next one.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (done || !q) return;
+      if (revealed) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          next();
+        }
+        return;
+      }
+      let label: string | undefined;
+      if (/^[1-4]$/.test(e.key)) label = q.options[parseInt(e.key, 10) - 1]?.label;
+      else {
+        const k = e.key.toUpperCase();
+        if (["A", "B", "C", "D"].includes(k)) label = q.options.find((o) => o.label === k)?.label;
+      }
+      if (label) {
+        e.preventDefault();
+        setSelected(label);
+      } else if (e.key === "Enter" && selected) {
+        e.preventDefault();
+        check();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+
   if (questions.length === 0)
     return (
       <div className="mx-auto max-w-md rounded-3xl border border-slate-200 bg-white p-8 text-center text-slate-500">
@@ -376,7 +405,19 @@ function Runner({ payload, onExit }: { payload: PayLoad; onExit: () => void }) {
           )}
         </div>
       </div>
+      <p className="mt-4 text-center text-xs text-slate-400">
+        Press <Kbd>1</Kbd>–<Kbd>4</Kbd> to choose · <Kbd>Enter</Kbd> to{" "}
+        {revealed ? "continue" : "check"}
+      </p>
     </div>
+  );
+}
+
+function Kbd({ children }: { children: React.ReactNode }) {
+  return (
+    <kbd className="rounded-md border border-slate-300 bg-white px-1.5 py-0.5 font-sans text-[10px] font-semibold text-slate-500 shadow-sm">
+      {children}
+    </kbd>
   );
 }
 
