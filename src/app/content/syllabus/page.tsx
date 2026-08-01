@@ -5,7 +5,8 @@
 // added or removed to match the exact edition in use.
 
 import { useEffect, useMemo, useState } from "react";
-import { BookOpen, ExternalLink, Layers, Link2, Loader2, Plus, X } from "lucide-react";
+import { BookOpen, ExternalLink, Layers, Link2, Loader2, Plus, Target, X } from "lucide-react";
+import { subjectBlurb } from "@/lib/curriculum/subject-blurb";
 
 interface Chapter {
   topicId: string;
@@ -38,6 +39,8 @@ interface GradeBlock {
   subjects: SubjectBlock[];
   textbookCount: number;
   chapterCount: number;
+  assessableSkills: number;
+  practiceQuestions: number;
 }
 
 export default function SyllabusPage() {
@@ -168,10 +171,21 @@ export default function SyllabusPage() {
 
           {current && (
             <div className="mt-5">
-              <p className="text-sm text-slate-500">
-                <span className="font-semibold text-slate-700">Grade {current.grade}</span> ·{" "}
-                {current.textbookCount} textbooks · {current.chapterCount} chapters
-              </p>
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-gradient-to-r from-slate-50 to-white px-5 py-3.5">
+                <p className="text-sm text-slate-500">
+                  <span className="font-semibold text-slate-700">Grade {current.grade}</span> ·{" "}
+                  {current.textbookCount} textbooks · {current.chapterCount} chapters ·{" "}
+                  <span className="font-medium text-emerald-700">
+                    {current.assessableSkills} assessable skills · {current.practiceQuestions} practice questions
+                  </span>
+                </p>
+                <a
+                  href="/practice"
+                  className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:brightness-110"
+                >
+                  <Target className="h-4 w-4" /> Practise
+                </a>
+              </div>
 
               <div className="mt-4 space-y-4">
                 {current.subjects.map((s) => (
@@ -180,7 +194,12 @@ export default function SyllabusPage() {
                     className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 bg-slate-50/60 px-6 py-3.5">
-                      <h2 className="font-bold text-slate-800">{s.subjectName}</h2>
+                      <div>
+                        <h2 className="font-bold text-slate-800">{s.subjectName}</h2>
+                        {subjectBlurb(s.subjectName) && (
+                          <p className="mt-0.5 text-xs text-slate-400">{subjectBlurb(s.subjectName)}</p>
+                        )}
+                      </div>
                       <span className="text-xs font-semibold text-slate-400">
                         {s.chapterCount} chapters
                       </span>

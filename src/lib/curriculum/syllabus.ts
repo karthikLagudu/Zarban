@@ -14,7 +14,16 @@ export interface SyllabusGrade {
   }[];
   textbookCount: number;
   chapterCount: number;
+  /** How much assessment/practice content backs this grade — the link between
+   *  the reference syllabus and the adaptive learning loop. */
+  assessableSkills: number;
+  practiceQuestions: number;
 }
+
+const baseGrade = (g: string | null): number => {
+  const m = String(g ?? "").match(/\d+/);
+  return m ? parseInt(m[0], 10) : 0;
+};
 
 export async function buildSyllabus(): Promise<SyllabusGrade[]> {
   const subjects = await prisma.subject.findMany({
@@ -31,6 +40,16 @@ export async function buildSyllabus(): Promise<SyllabusGrade[]> {
     for (const b of s.textbooks) gradeSet.add(b.grade);
   }
   const grades = [...gradeSet].sort((a, b) => a - b);
+
+  // Backing content per grade: assessable skills + available practice questions.
+  const [skillRows, questionRows] = await Promise.all([
+    prisma.skill.findMany({ select: { gradeLevel: true } }),
+    prisma.question.findMany({ select: { gradeLevel: true } }),
+  ]);
+  const skillsAtGrade = (g: number) =>
+    skillRows.filter((s) => baseGrade(s.gradeLevel) === g).length;
+  const questionsAtGrade = (g: number) =>
+    questionRows.filter((q) => q.gradeLevel === g).length;
 
   return grades.map((grade) => {
     const subjectBlocks = subjects
@@ -56,6 +75,8 @@ export async function buildSyllabus(): Promise<SyllabusGrade[]> {
       subjects: subjectBlocks,
       textbookCount: subjectBlocks.reduce((a, s) => a + s.textbooks.length, 0),
       chapterCount: subjectBlocks.reduce((a, s) => a + s.chapterCount, 0),
+      assessableSkills: skillsAtGrade(grade),
+      practiceQuestions: questionsAtGrade(grade),
     };
   });
 }
