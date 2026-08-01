@@ -24,10 +24,18 @@ try {
     'INSERT INTO "topics" (topic_id, subject_id, grade, name, chapter_no, "order", created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
   );
   const insTextbook = db.prepare(
-    'INSERT INTO "textbooks" (textbook_id, subject_id, grade, name, "order", created_at) VALUES (?, ?, ?, ?, ?, ?)'
+    'INSERT INTO "textbooks" (textbook_id, subject_id, grade, name, pdf_url, "order", created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
   );
   const now = new Date().toISOString();
   const subjectIds = new Map<string, string>();
+
+  // A per-book link to its soft copy on the official (free) NCERT source, so no
+  // textbook is left without a reference. Strips any "(discipline)" qualifier.
+  const softCopyUrl = (grade: number, name: string) =>
+    "https://www.google.com/search?q=" +
+    encodeURIComponent(
+      `NCERT Class ${grade} ${name.replace(/\s*\(.*?\)\s*$/, "").trim()} textbook PDF site:ncert.nic.in`
+    );
 
   NCERT_CURRICULUM.forEach((subject, si) => {
     const subjectId = randomUUID();
@@ -50,7 +58,7 @@ try {
     const key = `${tb.subject}:${tb.grade}`;
     const ord = orderCounter.get(key) ?? 0;
     orderCounter.set(key, ord + 1);
-    insTextbook.run(randomUUID(), subjectId, tb.grade, tb.name, ord, now);
+    insTextbook.run(randomUUID(), subjectId, tb.grade, tb.name, softCopyUrl(tb.grade, tb.name), ord, now);
   }
 
   db.exec("COMMIT");
