@@ -127,8 +127,13 @@ export default function CurriculumPage() {
       )}
 
       {!subjects ? (
-        <div className="mt-6 flex items-center gap-3 text-slate-400">
-          <Loader2 className="h-5 w-5 animate-spin" /> Loading curriculum…
+        <div className="mt-6 grid gap-6 md:grid-cols-[16rem_1fr]">
+          <div className="space-y-2">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="skeleton h-12 rounded-2xl" />
+            ))}
+          </div>
+          <div className="skeleton h-96 rounded-3xl" />
         </div>
       ) : (
         <div className="mt-6 grid gap-6 md:grid-cols-[16rem_1fr]">

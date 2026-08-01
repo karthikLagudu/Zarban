@@ -105,10 +105,10 @@ export default function ContentLayout({ children }: { children: React.ReactNode 
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`group relative flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition ${
+                  className={`group relative flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all duration-200 ${
                     active
                       ? "bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700"
-                      : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+                      : "text-slate-500 hover:translate-x-0.5 hover:bg-slate-50 hover:text-slate-800"
                   }`}
                 >
                   {active && (

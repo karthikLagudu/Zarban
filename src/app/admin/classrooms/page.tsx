@@ -97,8 +97,10 @@ export default function ClassroomsPage() {
       )}
 
       {!rooms ? (
-        <div className="mt-6 flex items-center gap-3 text-slate-400">
-          <Loader2 className="h-5 w-5 animate-spin" /> Loading classes…
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="skeleton h-40 rounded-3xl" />
+          ))}
         </div>
       ) : rooms.length === 0 ? (
         <div className="mt-6 rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center">

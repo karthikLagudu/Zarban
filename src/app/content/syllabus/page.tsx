@@ -124,8 +124,17 @@ export default function SyllabusPage() {
       )}
 
       {!grades ? (
-        <div className="mt-6 flex items-center gap-3 text-slate-400">
-          <Loader2 className="h-5 w-5 animate-spin" /> Loading syllabus…
+        <div className="mt-6">
+          <div className="flex gap-2">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <div key={i} className="skeleton h-10 w-24 rounded-xl" />
+            ))}
+          </div>
+          <div className="mt-5 space-y-4">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="skeleton h-32 rounded-3xl" />
+            ))}
+          </div>
         </div>
       ) : grades.length === 0 ? (
         <div className="mt-6 rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center text-slate-400">

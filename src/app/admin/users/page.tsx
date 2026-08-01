@@ -123,8 +123,10 @@ export default function UsersPage() {
       {/* Users table */}
       <section className="mt-6 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
         {!users ? (
-          <div className="flex items-center gap-3 p-8 text-slate-400">
-            <Loader2 className="h-5 w-5 animate-spin" /> Loading accounts…
+          <div className="space-y-3 p-6">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="skeleton h-12 rounded-xl" />
+            ))}
           </div>
         ) : (
           <table className="w-full text-left text-sm">

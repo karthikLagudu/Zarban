@@ -152,7 +152,9 @@ function Picker({ catalog, onPick }: { catalog: CatalogSkill[] | null; onPick: (
         <span className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-4 py-1.5 text-sm font-semibold text-indigo-700 ring-1 ring-indigo-100">
           <Target className="h-4 w-4" /> Practice Mode
         </span>
-        <h1 className="mt-4 text-3xl font-bold text-slate-900">Pick a skill to practise</h1>
+        <h1 className="mt-4 text-3xl font-bold text-slate-900">
+          Pick a skill to <span className="text-gradient">practise</span>
+        </h1>
         <p className="mt-2 text-slate-500">
           Every answer is checked instantly — and when you slip, we show you exactly why.
         </p>
