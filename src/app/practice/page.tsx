@@ -133,8 +133,13 @@ export default function PracticePage() {
 function Picker({ catalog, onPick }: { catalog: CatalogSkill[] | null; onPick: (id: string) => void }) {
   if (!catalog)
     return (
-      <div className="mx-auto flex max-w-3xl items-center gap-3 text-slate-400">
-        <Loader2 className="h-5 w-5 animate-spin" /> Loading skills…
+      <div className="mx-auto max-w-4xl">
+        <div className="skeleton mx-auto h-9 w-64 rounded-xl" />
+        <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="skeleton h-20 rounded-2xl" />
+          ))}
+        </div>
       </div>
     );
 

@@ -299,7 +299,7 @@ function Stat({
 }) {
   return (
     <div
-      className={`rounded-2xl px-4 py-3 ring-1 ${
+      className={`hover-lift rounded-2xl px-4 py-3 ring-1 ${
         tone === "amber" ? "bg-amber-50 ring-amber-100" : "bg-slate-50 ring-slate-100"
       }`}
     >

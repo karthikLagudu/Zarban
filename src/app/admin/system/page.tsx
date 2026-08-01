@@ -127,8 +127,10 @@ export default function SystemPage() {
           <Database className="h-4 w-4 text-slate-400" /> Data snapshot
         </h2>
         {!counts ? (
-          <div className="mt-4 flex items-center gap-2 text-slate-400">
-            <Loader2 className="h-4 w-4 animate-spin" /> Loading…
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="skeleton h-16 rounded-2xl" />
+            ))}
           </div>
         ) : (
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
@@ -182,8 +184,10 @@ export default function SystemPage() {
           <History className="h-4 w-4 text-slate-400" /> Audit log
         </h2>
         {!audit ? (
-          <div className="flex items-center gap-2 p-6 text-slate-400">
-            <Loader2 className="h-4 w-4 animate-spin" /> Loading…
+          <div className="space-y-3 p-6">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="skeleton h-8 rounded-lg" />
+            ))}
           </div>
         ) : audit.length === 0 ? (
           <p className="p-6 text-sm text-slate-400">No actions recorded yet.</p>
@@ -244,7 +248,7 @@ export default function SystemPage() {
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-2xl bg-slate-50 px-4 py-3 ring-1 ring-slate-100">
+    <div className="hover-lift rounded-2xl bg-slate-50 px-4 py-3 ring-1 ring-slate-100">
       <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{label}</p>
       <p className="mt-0.5 text-xl font-bold text-slate-900 tabular-nums">{value}</p>
     </div>
