@@ -30,8 +30,8 @@ npx wrangler d1 execute zarban --remote --file=drizzle/0000_initial.sql
 # 5. Build the Worker
 npm run build
 
-# 6. Point the built config at YOUR D1, then deploy.
-#    Edit dist/server/wrangler.json → d1_databases[0].database_id = <id from step 3>
+# 6. Point the built config at YOUR D1 (id from step 3), then deploy
+node scripts/patch-d1.mjs <database_id>
 cd dist/server && npx wrangler deploy
 ```
 
