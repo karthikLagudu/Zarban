@@ -8,6 +8,7 @@
 
 import { prisma } from "@/lib/db";
 import type { AssessmentSession, Question } from "@/generated/prisma/client";
+import { allEdges, seenInEarlierSessions, settingInt, skillById } from "./cache";
 import { bktUpdate, clamp01 } from "./bkt";
 import { escalateDifficulty, reduceDifficulty } from "./difficulty";
 import { fetchQuestion } from "./fetch-question";
@@ -70,22 +71,6 @@ function listToCsv(list: string[]): string {
   return list.join(",");
 }
 
-/** Question ids this student saw in earlier sessions — soft-avoided so
- *  retakes serve fresh items (CAT exposure control). */
-async function seenInEarlierSessions(
-  studentId: string,
-  currentSessionId: string
-): Promise<string[]> {
-  const rows = await prisma.response.findMany({
-    where: {
-      session: { studentId, sessionId: { not: currentSessionId } },
-    },
-    select: { questionId: true },
-    distinct: ["questionId"],
-  });
-  return rows.map((r) => r.questionId);
-}
-
 // ── Session start ────────────────────────────────────────────────────────────
 
 export async function startSession(
@@ -144,18 +129,14 @@ export async function startSession(
 }
 
 async function getMaxQuestions(): Promise<number> {
-  const s = await prisma.setting.findUnique({ where: { key: "max_questions" } });
-  const n = s ? parseInt(s.value, 10) : NaN;
-  return Number.isFinite(n) && n > 0 ? n : 30;
+  const n = await settingInt("max_questions", 30);
+  return n > 0 ? n : 30;
 }
 
 /** Total test time limit in seconds (0 = no limit). */
 export async function getTestTimeLimitSeconds(): Promise<number> {
-  const s = await prisma.setting.findUnique({
-    where: { key: "test_timer_minutes" },
-  });
-  const n = s ? parseInt(s.value, 10) : NaN;
-  return Number.isFinite(n) && n > 0 ? n * 60 : 0;
+  const n = await settingInt("test_timer_minutes", 0);
+  return n > 0 ? n * 60 : 0;
 }
 
 /** End a session explicitly (used when the total test timer expires). */
@@ -181,48 +162,64 @@ export async function processResponse(
   selectedOption: string,
   responseTimeMs?: number
 ): Promise<StepResult> {
-  const session = await prisma.assessmentSession.findUnique({
-    where: { sessionId },
-  });
+  // The session and the just-answered question are independent reads — fetch
+  // both in one round trip instead of two.
+  const [session, question] = await Promise.all([
+    prisma.assessmentSession.findUnique({ where: { sessionId } }),
+    prisma.question.findUnique({
+      where: { questionId },
+      include: { primarySkill: true },
+    }),
+  ]);
   if (!session) throw new Error("Session not found");
   if (session.status !== "in_progress") {
     return { done: true, decision: "already_completed", reason: session.status };
   }
-
-  const question = await prisma.question.findUnique({
-    where: { questionId },
-    include: { primarySkill: true },
-  });
   if (!question) throw new Error("Question not found");
 
   const option = selectedOption.trim().toUpperCase().slice(0, 1);
   const isCorrect = option === (question.correctOption ?? "").trim().toUpperCase();
   const wasTwinProbe = session.twinProbePending;
+  const skillId = question.primarySkillId ?? session.currentSkillId;
 
-  // Step 1 — CDM: identify the trap when wrong.
-  const trap = !isCorrect
-    ? await prisma.answerTrap.findUnique({
-        where: {
-          questionId_optionLabel: { questionId, optionLabel: option },
+  // The three inputs to the update — the answer trap (CDM), the current BKT
+  // state, and the session history (IRT) — are all independent reads. Batch
+  // them so their latency overlaps rather than adding up. History is trimmed to
+  // only the fields the engine consumes.
+  const [trap, bktStateRow, priorResponses] = await Promise.all([
+    !isCorrect
+      ? prisma.answerTrap.findUnique({
+          where: { questionId_optionLabel: { questionId, optionLabel: option } },
+        })
+      : Promise.resolve(null),
+    skillId
+      ? prisma.bktState.findUnique({
+          where: { studentId_skillId: { studentId: session.studentId, skillId } },
+        })
+      : Promise.resolve(null),
+    prisma.response.findMany({
+      where: { sessionId },
+      select: {
+        questionId: true,
+        isCorrect: true,
+        twinProbe: true,
+        question: {
+          select: { irtA: true, irtB: true, irtC: true, gradeLevel: true, difficultyBand: true },
         },
-      })
-    : null;
+      },
+      orderBy: { responseId: "asc" },
+    }),
+  ]);
 
   // Step 4 — BKT update (every response).
-  const skillId = question.primarySkillId ?? session.currentSkillId;
   let prior = DEFAULT_BKT_PARAMS.pL0;
   let pNew = prior;
   let attempts = 1;
   if (skillId) {
-    const state = await prisma.bktState.findUnique({
-      where: {
-        studentId_skillId: { studentId: session.studentId, skillId },
-      },
-    });
-    prior = state?.pMastery ?? DEFAULT_BKT_PARAMS.pL0;
+    prior = bktStateRow?.pMastery ?? DEFAULT_BKT_PARAMS.pL0;
     const res = bktUpdate(prior, isCorrect);
     pNew = res.pNew;
-    attempts = (state?.attempts ?? 0) + 1;
+    attempts = (bktStateRow?.attempts ?? 0) + 1;
     await prisma.bktState.upsert({
       where: {
         studentId_skillId: { studentId: session.studentId, skillId },
@@ -241,11 +238,6 @@ export async function processResponse(
   }
 
   // Step 5 — IRT θ update over the full session history.
-  const priorResponses = await prisma.response.findMany({
-    where: { sessionId },
-    include: { question: true },
-    orderBy: { responseId: "asc" },
-  });
   const observations: IrtObservation[] = [
     ...priorResponses.map((r) => ({
       item: itemParamsOf(r.question),
@@ -315,42 +307,41 @@ export async function processResponse(
     route = await routeCorrectAnswer(session, prior, pNew, consecutiveCorrect);
   }
 
-  // Record the response with full replay context.
-  await prisma.response.create({
-    data: {
-      sessionId,
-      questionId,
-      selectedOption: option,
-      isCorrect,
-      trapType: trap?.trapType ?? null,
-      skillGapId: trap?.skillGapId ?? null,
-      misconception: trap?.misconception ?? null,
-      twinProbe: wasTwinProbe,
-      servedSkillId: session.currentSkillId,
-      servedGrade: session.currentGrade,
-      servedDifficulty: session.currentDifficulty,
-      engineDecision: route.decision,
-      thetaAfter: theta,
-      pMasteryAfter: skillId ? pNew : null,
-      responseTimeMs: responseTimeMs ?? null,
-    },
-  });
-
-  // Persist counters/state before serving.
-  await prisma.assessmentSession.update({
-    where: { sessionId },
-    data: {
-      currentTheta: theta,
-      consecutiveFailures,
-      consecutiveCorrect,
-      twinProbePending: route.isTwinProbe === true,
-      twinOriginQuestion: route.isTwinProbe ? questionId : session.twinOriginQuestion,
-      pendingConfirmation: route.decision === "lucky_guess_confirmation",
-    },
-  });
-  const fresh = (await prisma.assessmentSession.findUnique({
-    where: { sessionId },
-  }))!;
+  // Record the response and persist session counters together — two
+  // independent writes to different tables, so run them concurrently. The
+  // update returns the fresh row, avoiding a third round trip to re-read it.
+  const [, fresh] = await Promise.all([
+    prisma.response.create({
+      data: {
+        sessionId,
+        questionId,
+        selectedOption: option,
+        isCorrect,
+        trapType: trap?.trapType ?? null,
+        skillGapId: trap?.skillGapId ?? null,
+        misconception: trap?.misconception ?? null,
+        twinProbe: wasTwinProbe,
+        servedSkillId: session.currentSkillId,
+        servedGrade: session.currentGrade,
+        servedDifficulty: session.currentDifficulty,
+        engineDecision: route.decision,
+        thetaAfter: theta,
+        pMasteryAfter: skillId ? pNew : null,
+        responseTimeMs: responseTimeMs ?? null,
+      },
+    }),
+    prisma.assessmentSession.update({
+      where: { sessionId },
+      data: {
+        currentTheta: theta,
+        consecutiveFailures,
+        consecutiveCorrect,
+        twinProbePending: route.isTwinProbe === true,
+        twinOriginQuestion: route.isTwinProbe ? questionId : session.twinOriginQuestion,
+        pendingConfirmation: route.decision === "lucky_guess_confirmation",
+      },
+    }),
+  ]);
 
   // ── Termination checks (Part 7.2 + total test timer) ──────────────────────
   const timeLimit = await getTestTimeLimitSeconds();
@@ -363,7 +354,9 @@ export async function processResponse(
   if (modelQuestionsAnswered >= fresh.maxQuestions) {
     return endSession(fresh, "max_questions_reached", skillId ?? undefined, pNew, theta);
   }
-  if (await allGradeSkillsMastered(fresh)) {
+  // A wrong answer can only lower mastery (BKT + DKT), so the "all skills
+  // mastered" set can't newly complete on one — skip the probe unless correct.
+  if (isCorrect && (await allGradeSkillsMastered(fresh))) {
     return endSession(fresh, "all_skills_mastered", skillId ?? undefined, pNew, theta);
   }
 
@@ -479,9 +472,7 @@ async function traversalRoute(
   const curSkill = session.currentSkillId;
   const curGrade = session.currentGrade ?? session.selectedGrade ?? 7;
 
-  let target = preferredSkillId
-    ? await prisma.skill.findUnique({ where: { skillId: preferredSkillId } })
-    : null;
+  let target = preferredSkillId ? await skillById(preferredSkillId) : null;
   if (!target && curSkill) target = await getPrerequisite(curSkill);
 
   if (!target || target.skillId === curSkill) {
@@ -848,36 +839,49 @@ async function propagateDkt(
   delta: number
 ) {
   if (Math.abs(delta) < 1e-6) return;
-  const children = await prisma.knowledgeGraphEdge.findMany({
-    where: { parentSkillId: skillId },
+  // Children come from the cached knowledge graph (no query). Read all their
+  // current states in one findMany, then fire the upserts concurrently instead
+  // of a serial read+write per child.
+  const childIds = (await allEdges())
+    .filter((e) => e.parentSkillId === skillId)
+    .map((e) => e.childSkillId);
+  if (childIds.length === 0) return;
+
+  const existing = await prisma.bktState.findMany({
+    where: { studentId, skillId: { in: childIds } },
   });
-  for (const edge of children) {
-    const child = await prisma.bktState.findUnique({
-      where: {
-        studentId_skillId: { studentId, skillId: edge.childSkillId },
-      },
-    });
-    const current = child?.pMastery ?? DEFAULT_BKT_PARAMS.pL0;
-    const updated = clamp01(current + DKT_PROPAGATION_COEFFICIENT * delta);
-    await prisma.bktState.upsert({
-      where: {
-        studentId_skillId: { studentId, skillId: edge.childSkillId },
-      },
-      create: {
-        studentId,
-        skillId: edge.childSkillId,
-        pMastery: updated,
-        attempts: 0,
-        lastUpdated: new Date(),
-      },
-      update: { pMastery: updated, lastUpdated: new Date() },
-    });
-  }
+  const byId = new Map(existing.map((s) => [s.skillId, s]));
+
+  await Promise.all(
+    childIds.map((childSkillId) => {
+      const current = byId.get(childSkillId)?.pMastery ?? DEFAULT_BKT_PARAMS.pL0;
+      const updated = clamp01(current + DKT_PROPAGATION_COEFFICIENT * delta);
+      return prisma.bktState.upsert({
+        where: { studentId_skillId: { studentId, skillId: childSkillId } },
+        create: {
+          studentId,
+          skillId: childSkillId,
+          pMastery: updated,
+          attempts: 0,
+          lastUpdated: new Date(),
+        },
+        update: { pMastery: updated, lastUpdated: new Date() },
+      });
+    })
+  );
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function itemParamsOf(q: Question) {
+/** IRT item params from whatever question fields are loaded (full row or the
+ *  trimmed history projection). */
+function itemParamsOf(q: {
+  irtA: number | null;
+  irtB: number | null;
+  irtC: number | null;
+  gradeLevel: number | null;
+  difficultyBand: string | null;
+}) {
   if (q.irtA && q.irtB !== null && q.irtC !== null) {
     return { a: q.irtA, b: q.irtB, c: q.irtC };
   }
@@ -890,9 +894,7 @@ async function toServed(
   session: AssessmentSession,
   questionNumber: number
 ): Promise<ServedQuestion> {
-  const skill = q.primarySkillId
-    ? await prisma.skill.findUnique({ where: { skillId: q.primarySkillId } })
-    : null;
+  const skill = q.primarySkillId ? await skillById(q.primarySkillId) : null;
   return {
     questionId: q.questionId,
     questionText: q.questionText,

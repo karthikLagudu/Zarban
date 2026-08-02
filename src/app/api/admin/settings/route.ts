@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
+import { invalidateSettings } from "@/lib/engine/cache";
 
 // Each key with the clamp applied when it is saved.
 const KEYS: Record<string, { min: number; max: number }> = {
@@ -44,6 +45,7 @@ export async function PUT(req: NextRequest) {
     }
   }
   if (changes.length) {
+    invalidateSettings(); // take effect immediately, not after the cache TTL
     await logAudit(auth.session, "settings.update", null, changes.join(", "));
   }
   return NextResponse.json({ updated });

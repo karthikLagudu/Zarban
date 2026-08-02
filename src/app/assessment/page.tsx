@@ -39,8 +39,11 @@ interface StoredState {
   grade: number;
 }
 
-/** Delay between picking an option and submitting, so the choice is visible. */
-const SUBMIT_FEEDBACK_MS = 350;
+/** Minimum time a picked option stays highlighted before the next question
+ *  appears. The answer is submitted *immediately*, so this overlaps the network
+ *  round trip instead of stacking on top of it — only the leftover (when the
+ *  response beats it) is ever actually waited out. */
+const MIN_CHOICE_VISIBLE_MS = 180;
 
 export default function AssessmentPage() {
   const router = useRouter();
@@ -50,6 +53,7 @@ export default function AssessmentPage() {
   const [error, setError] = useState<string | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const questionStartedAt = useRef<number>(Date.now());
+  const pickedAtRef = useRef<number>(0);
   const submittingRef = useRef(false);
 
   useEffect(() => {
@@ -103,6 +107,14 @@ export default function AssessmentPage() {
         const data = text ? JSON.parse(text) : {};
         if (!res.ok) throw new Error(data.error ?? `Could not submit (${res.status})`);
         const step: Step = data.step;
+        // Hold the chosen option on screen for a beat if the response outran
+        // MIN_CHOICE_VISIBLE_MS; usually the network already covered it.
+        const shownFor = Date.now() - pickedAtRef.current;
+        if (shownFor < MIN_CHOICE_VISIBLE_MS) {
+          await new Promise((r) =>
+            setTimeout(r, MIN_CHOICE_VISIBLE_MS - shownFor)
+          );
+        }
         const next: StoredState = { ...state, step };
         if (step.done) {
           localStorage.removeItem("zarban_assessment");
@@ -129,7 +141,8 @@ export default function AssessmentPage() {
     (label: string) => {
       if (busy || submittingRef.current) return;
       setSelected(label);
-      window.setTimeout(() => void submit(label), SUBMIT_FEEDBACK_MS);
+      pickedAtRef.current = Date.now();
+      void submit(label); // fire immediately — the network overlaps the highlight
     },
     [busy, submit]
   );

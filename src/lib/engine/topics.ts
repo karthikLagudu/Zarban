@@ -1,10 +1,7 @@
 // Topic (skill) sequencing helpers over the knowledge graph.
 
 import type { Skill } from "@/generated/prisma/client";
-
-async function getPrisma() {
-  return (await import("@/lib/db")).prisma;
-}
+import { allEdges, allSkills } from "./cache";
 
 /**
  * A skill's grade_level is a string like "5", "9-10", or "7,8". Returns true
@@ -37,8 +34,7 @@ export function skillBaseGrade(gradeLevel: string | null, fallback = 5): number 
 
 /** Ordered list of topic-model skills for a grade (skill_id order = SME order). */
 export async function getTopicsForGrade(grade: number): Promise<Skill[]> {
-  const prisma = await getPrisma();
-  const skills = await prisma.skill.findMany({ orderBy: { skillId: "asc" } });
+  const skills = await allSkills();
   return skills.filter((s) => gradeMatches(s.gradeLevel, grade));
 }
 
@@ -62,13 +58,16 @@ export async function getNextTopic(
  * "drop one grade at a time" traversal described in the spec.
  */
 export async function getPrerequisite(skillId: string): Promise<Skill | null> {
-  const prisma = await getPrisma();
-  const edges = await prisma.knowledgeGraphEdge.findMany({
-    where: { childSkillId: skillId },
-    include: { parent: true },
-  });
-  if (edges.length === 0) return null;
-  const parents = edges.map((e) => e.parent);
+  const [edges, skills] = await Promise.all([allEdges(), allSkills()]);
+  const parentIds = edges
+    .filter((e) => e.childSkillId === skillId)
+    .map((e) => e.parentSkillId);
+  if (parentIds.length === 0) return null;
+  const byId = new Map(skills.map((s) => [s.skillId, s]));
+  const parents = parentIds
+    .map((id) => byId.get(id))
+    .filter((s): s is Skill => Boolean(s));
+  if (parents.length === 0) return null;
   parents.sort(
     (a, b) => skillBaseGrade(b.gradeLevel) - skillBaseGrade(a.gradeLevel)
   );
