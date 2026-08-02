@@ -51,6 +51,8 @@ const ACTION_BADGE: Record<string, string> = {
   "settings.update": "bg-sky-50 text-sky-700",
   "data.reset_learner_history": "bg-rose-100 text-rose-800",
   "data.clear_incomplete_sessions": "bg-amber-100 text-amber-800",
+  "db.update_row": "bg-sky-50 text-sky-700",
+  "db.delete_row": "bg-rose-50 text-rose-700",
 };
 
 export default function SystemPage() {

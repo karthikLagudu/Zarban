@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import {
   ArrowUpRight,
   ChartLine,
+  Database,
   FileSpreadsheet,
   GraduationCap,
   Layers,
@@ -62,6 +63,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/admin/settings", label: "Settings", icon: Settings },
       { href: "/admin/users", label: "User Access", icon: UserCog },
+      { href: "/admin/database", label: "Database", icon: Database },
       { href: "/admin/system", label: "System & Audit", icon: ShieldAlert },
     ],
   },
