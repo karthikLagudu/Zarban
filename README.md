@@ -22,6 +22,13 @@ plane for administrators.
 ![Cloudflare](https://img.shields.io/badge/Cloudflare_Workers_+_D1-F38020?style=flat-square&logo=cloudflare&logoColor=white)
 ![Tests](https://img.shields.io/badge/tests-39_unit_·_136_e2e-3fb950?style=flat-square&logo=vitest&logoColor=white)
 ![Questions](https://img.shields.io/badge/question_bank-911_items-7c3aed?style=flat-square)
+[![Live demo](https://img.shields.io/badge/▶_live_demo-online-16a34a?style=flat-square&logo=cloudflare&logoColor=white)](https://zarban.zarbanlabs-app.workers.dev)
+
+<br/>
+
+### 🚀 Live app — [**zarban.zarbanlabs-app.workers.dev**](https://zarban.zarbanlabs-app.workers.dev)
+
+Hosted **free** on Cloudflare Workers + D1 &nbsp;·&nbsp; [Home](https://zarban.zarbanlabs-app.workers.dev) · [Assessment](https://zarban.zarbanlabs-app.workers.dev/assessment) · [Learn](https://zarban.zarbanlabs-app.workers.dev/learn) · [Syllabus](https://zarban.zarbanlabs-app.workers.dev/content/syllabus) · [Admin](https://zarban.zarbanlabs-app.workers.dev/admin/login)
 
 </div>
 
@@ -29,6 +36,7 @@ plane for administrators.
 
 ## Table of contents
 
+- [Live demo](#live-demo)
 - [What is Zarban](#what-is-zarban)
 - [The three experiences](#the-three-experiences)
 - [Feature matrix](#feature-matrix)
@@ -44,6 +52,47 @@ plane for administrators.
 - [Project structure](#project-structure)
 - [Deployment](#deployment)
 - [Configuration & security](#configuration--security)
+
+---
+
+## Live demo
+
+Zarban is deployed **live and free** on Cloudflare Workers + D1:
+
+> ### 🌐 https://zarban.zarbanlabs-app.workers.dev
+
+**Main app (public)**
+
+| Link | What it is |
+|---|---|
+| [`/`](https://zarban.zarbanlabs-app.workers.dev) | Home |
+| [`/assessment`](https://zarban.zarbanlabs-app.workers.dev/assessment) | Take the adaptive assessment |
+| [`/learn`](https://zarban.zarbanlabs-app.workers.dev/learn) | Student learning hub |
+| [`/practice`](https://zarban.zarbanlabs-app.workers.dev/practice) | Practice mode (by skill) |
+
+**Content Studio**
+
+| Link | What it is |
+|---|---|
+| [`/content`](https://zarban.zarbanlabs-app.workers.dev/content) | Studio hub |
+| [`/content/syllabus`](https://zarban.zarbanlabs-app.workers.dev/content/syllabus) | Syllabus (NCERT, by grade) |
+| [`/content/curriculum`](https://zarban.zarbanlabs-app.workers.dev/content/curriculum) | Curriculum + textbooks |
+| [`/content/skills`](https://zarban.zarbanlabs-app.workers.dev/content/skills) | Interactive skills knowledge graph |
+
+**Admin console** — sign in at [`/admin/login`](https://zarban.zarbanlabs-app.workers.dev/admin/login)
+
+| Link | What it is |
+|---|---|
+| [`/admin`](https://zarban.zarbanlabs-app.workers.dev/admin) | Dashboard (command center) |
+| [`/admin/analytics`](https://zarban.zarbanlabs-app.workers.dev/admin/analytics) | Analytics |
+| [`/admin/students`](https://zarban.zarbanlabs-app.workers.dev/admin/students) | Students |
+| [`/admin/classrooms`](https://zarban.zarbanlabs-app.workers.dev/admin/classrooms) | Classrooms |
+| [`/admin/questions`](https://zarban.zarbanlabs-app.workers.dev/admin/questions) | Question bank |
+| [`/admin/syllabus`](https://zarban.zarbanlabs-app.workers.dev/admin/syllabus) | Syllabus editor |
+| [`/admin/users`](https://zarban.zarbanlabs-app.workers.dev/admin/users) | User access (RBAC) |
+| [`/admin/system`](https://zarban.zarbanlabs-app.workers.dev/admin/system) | System & audit |
+
+> **Demo sign-in:** `admin@zarban.local` / `admin123` — please change this in **User Access** on your own deployment.
 
 ---
 
