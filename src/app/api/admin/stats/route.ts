@@ -3,22 +3,34 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
+import { allSkills } from "@/lib/engine/cache";
 
 export async function GET() {
   const auth = await requireRole("Viewer");
   if ("error" in auth) return auth.error;
 
   const weekAgo = new Date(Date.now() - 7 * 24 * 3600 * 1000);
-  const [totalStudents, totalSessions, sessionsThisWeek] = await Promise.all([
-    prisma.student.count(),
-    prisma.assessmentSession.count(),
-    prisma.assessmentSession.count({ where: { startedAt: { gte: weekAgo } } }),
-  ]);
+  // Everything the dashboard needs is independent — one parallel batch instead
+  // of four sequential round trips. Skills come from the cached reference set.
+  const [totalStudents, totalSessions, sessionsThisWeek, sessions, responses, skills] =
+    await Promise.all([
+      prisma.student.count(),
+      prisma.assessmentSession.count(),
+      prisma.assessmentSession.count({ where: { startedAt: { gte: weekAgo } } }),
+      prisma.assessmentSession.findMany({
+        include: { responses: { select: { isCorrect: true } } },
+      }),
+      prisma.response.findMany({
+        select: {
+          isCorrect: true,
+          servedSkillId: true,
+          question: { select: { primarySkillId: true } },
+        },
+      }),
+      allSkills(),
+    ]);
 
   // Average accuracy by selected grade.
-  const sessions = await prisma.assessmentSession.findMany({
-    include: { responses: { select: { isCorrect: true } } },
-  });
   const byGrade = new Map<number, { total: number; correct: number; sessions: number }>();
   for (const s of sessions) {
     const g = s.selectedGrade ?? 0;
@@ -38,13 +50,6 @@ export async function GET() {
     .sort((a, b) => a.grade - b.grade);
 
   // Skill failure heatmap: failure rate per skill across all responses.
-  const responses = await prisma.response.findMany({
-    select: {
-      isCorrect: true,
-      servedSkillId: true,
-      question: { select: { primarySkillId: true } },
-    },
-  });
   const skillAgg = new Map<string, { total: number; wrong: number }>();
   for (const r of responses) {
     const sk = r.question.primarySkillId ?? r.servedSkillId;
@@ -54,7 +59,6 @@ export async function GET() {
     if (r.isCorrect === false) agg.wrong += 1;
     skillAgg.set(sk, agg);
   }
-  const skills = await prisma.skill.findMany();
   const heatmap = skills
     .map((s) => {
       const agg = skillAgg.get(s.skillId) ?? { total: 0, wrong: 0 };

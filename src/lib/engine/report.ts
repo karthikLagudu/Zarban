@@ -3,6 +3,7 @@
 // report object consumed by both the student report page and the admin view.
 
 import { prisma } from "@/lib/db";
+import { allSkills } from "./cache";
 import { MASTERY_THRESHOLD } from "./types";
 import { skillBaseGrade } from "./topics";
 import { computeGradeEquivalent } from "./grade-equivalent";
@@ -174,7 +175,7 @@ export async function generateReport(sessionId: string): Promise<DiagnosticRepor
   });
   if (!session) throw new Error("Session not found");
 
-  const skills = await prisma.skill.findMany();
+  const skills = await allSkills(); // cached reference set
   const skillMap = new Map(skills.map((s) => [s.skillId, s]));
 
   const responses = session.responses;
@@ -190,12 +191,19 @@ export async function generateReport(sessionId: string): Promise<DiagnosticRepor
     if (r.question.primarySkillId) touchedSkillIds.add(r.question.primarySkillId);
     if (r.servedSkillId) touchedSkillIds.add(r.servedSkillId);
   }
-  const bktRows = await prisma.bktState.findMany({
-    where: {
-      studentId: session.studentId,
-      skillId: { in: [...touchedSkillIds] },
-    },
-  });
+  // BKT mastery rows and the answer traps for this session's questions are both
+  // independent of each other — fetch them together.
+  const [bktRows, trapRows] = await Promise.all([
+    prisma.bktState.findMany({
+      where: {
+        studentId: session.studentId,
+        skillId: { in: [...touchedSkillIds] },
+      },
+    }),
+    prisma.answerTrap.findMany({
+      where: { questionId: { in: responses.map((r) => r.questionId) } },
+    }),
+  ]);
   const skillMastery: SkillMasteryRow[] = bktRows
     .map((b) => {
       const s = skillMap.get(b.skillId);
@@ -380,10 +388,8 @@ export async function generateReport(sessionId: string): Promise<DiagnosticRepor
       };
     });
 
-  // Question-by-question analysis with misconception explanations.
-  const trapRows = await prisma.answerTrap.findMany({
-    where: { questionId: { in: responses.map((r) => r.questionId) } },
-  });
+  // Question-by-question analysis with misconception explanations. (trapRows was
+  // fetched above, in parallel with the BKT rows.)
   const trapFor = (questionId: string, option: string | null) =>
     option
       ? (trapRows.find(
