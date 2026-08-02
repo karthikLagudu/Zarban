@@ -37,6 +37,7 @@ Hosted **free** on Cloudflare Workers + D1 &nbsp;·&nbsp; [Home](https://zarban.
 ## Table of contents
 
 - [Live demo](#live-demo)
+- [Screenshots](#screenshots)
 - [What is Zarban](#what-is-zarban)
 - [The three experiences](#the-three-experiences)
 - [Feature matrix](#feature-matrix)
@@ -93,6 +94,63 @@ Zarban is deployed **live and free** on Cloudflare Workers + D1:
 | [`/admin/system`](https://zarban.zarbanlabs-app.workers.dev/admin/system) | System & audit |
 
 > **Demo sign-in:** `admin@zarban.local` / `admin123` — please change this in **User Access** on your own deployment.
+
+---
+
+## Screenshots
+
+> Captured live from the deployed app at [zarban.zarbanlabs-app.workers.dev](https://zarban.zarbanlabs-app.workers.dev).
+
+### 🎓 Student experience
+
+The landing page invites a student straight into an adaptive assessment — no marks shown mid-test, just honest answers.
+
+![Zarban landing page](docs/screenshots/home.png)
+
+**The diagnostic report is the payoff:** a grade-level estimate, a plain-English *root-cause diagnosis*, test-taking behaviour (lucky-guess & rushed-answer detection), a five-dimension learning profile, and an error-pattern breakdown.
+
+![Diagnostic report](docs/screenshots/report.png)
+
+**Detailed analysis** replays the session question-by-question — the ability (θ) journey, the exact adaptive path the engine took (twin-probe, lucky-guess and rushed markers included), and time spent per question.
+
+![Detailed analysis](docs/screenshots/report-analysis.png)
+
+**Practice mode** lets a learner drill any skill, grouped by grade, with instant "why" feedback on every answer.
+
+![Practice mode](docs/screenshots/practice.png)
+
+### 🛠️ Admin command center
+
+A role-aware home: live totals, the hottest skill gaps right now, a quick-actions launchpad, average score by grade, and a class-level skill-failure heatmap.
+
+![Admin dashboard](docs/screenshots/admin-dashboard.png)
+
+| Cohort analytics | System &amp; audit |
+|:---:|:---:|
+| ![Cohort analytics](docs/screenshots/admin-analytics.png) | ![System and audit](docs/screenshots/admin-system.png) |
+| Performance trends, error patterns, prerequisite-gap tracker | Data snapshot, guarded danger-zone, full audit trail |
+
+| Students | Question bank |
+|:---:|:---:|
+| ![Students](docs/screenshots/admin-students.png) | ![Question bank](docs/screenshots/admin-questions.png) |
+| Every learner, searchable, with per-student drill-down | 900+ items with misconception traps &amp; rich metadata |
+
+> Teachers can also group learners into **classrooms** and monitor just their own classes — assign a teacher to a roster and the *Mine* filter scopes the whole console to them.
+
+### 📚 Content Studio
+
+**The interactive skills knowledge graph** — every skill node, colour-coded by domain, wired together by the prerequisite edges the adaptive engine actually traverses. Click a node to highlight everything up- and downstream.
+
+![Skills knowledge graph](docs/screenshots/content-skills.png)
+
+| Syllabus (NCERT) | Curriculum |
+|:---:|:---:|
+| ![Syllabus](docs/screenshots/content-syllabus.png) | ![Curriculum](docs/screenshots/content-curriculum.png) |
+| Textbooks &amp; chapters by grade, with assessable-skill counts | Subjects, topics and NCERT textbooks with soft-copy links |
+
+**Question authoring** — browse, filter and edit the full bank, each item mapped to a skill, difficulty band and its answer traps.
+
+![Question authoring](docs/screenshots/content-questions.png)
 
 ---
 
