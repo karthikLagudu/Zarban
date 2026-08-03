@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Zarban — Client Brief</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    color: #1b2138; line-height: 1.55; margin: 0; font-size: 11pt;
+  }
+  h1, h2, h3 { color: #1b2138; line-height: 1.2; margin: 0; }
+  .accent { color: #4f46e5; }
+  a { color: #4f46e5; text-decoration: none; }
+  .muted { color: #5a6178; }
+  small { font-size: 9pt; }
+
+  /* Cover */
+  .cover { text-align: center; padding: 30mm 0 14mm; }
+  .cover .mark {
+    width: 66px; height: 66px; border-radius: 18px; margin: 0 auto 14px;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff;
+  }
+  .cover .mark svg { width: 34px; height: 34px; }
+  .cover h1 { font-size: 40pt; letter-spacing: -1px; color: #4f46e5; }
+  .cover .sub { font-size: 15pt; margin-top: 6px; font-weight: 600; }
+  .cover .tag { color: #5a6178; margin-top: 6px; font-style: italic; }
+  .cover .links { margin-top: 18px; font-size: 10pt; }
+  .rule { height: 3px; background: linear-gradient(90deg, #6366f1, #8b5cf6); border-radius: 2px; width: 70px; margin: 4px 0 14px; }
+
+  section { margin-top: 16px; }
+  h2 { font-size: 16pt; margin-top: 4px; }
+  h3 { font-size: 12pt; margin: 12px 0 4px; }
+  p { margin: 7px 0; }
+  ul { margin: 6px 0; padding-left: 20px; }
+  li { margin: 4px 0; }
+
+  .lead { font-size: 12pt; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px; }
+  .card { border: 1px solid #e4e7f2; border-radius: 10px; padding: 11px 13px; background: #f9fafe; }
+  .card h3 { margin: 0 0 3px; color: #4f46e5; }
+  .card p { margin: 0; font-size: 9.5pt; color: #40465e; }
+
+  figure { margin: 12px 0 4px; page-break-inside: avoid; }
+  figure img { width: 100%; border: 1px solid #d9dcea; border-radius: 8px; display: block; }
+  figcaption { font-size: 9pt; color: #5a6178; font-style: italic; margin-top: 5px; text-align: center; }
+
+  .metrics { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 10pt; }
+  .metrics th { background: #4f46e5; color: #fff; text-align: left; padding: 7px 10px; }
+  .metrics td { padding: 6px 10px; border-bottom: 1px solid #eceef6; }
+  .metrics tr:nth-child(even) td { background: #f7f8fc; }
+  .good { color: #047857; font-weight: 600; }
+
+  .callout { background: #eef0fe; border-radius: 10px; padding: 12px 15px; margin-top: 12px; }
+  .callout b { color: #4f46e5; }
+  .pagebreak { page-break-before: always; }
+  .foot { margin-top: 20px; padding-top: 10px; border-top: 1px solid #e4e7f2; color: #5a6178; font-size: 9pt; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1 2 2 6 2s6-1 6-2v-5"/></svg></div>
+  <h1>Zarban</h1>
+  <div class="sub">Adaptive Math Assessment &amp; Learning Platform</div>
+  <div class="tag">Client Handover Brief · Grades 5–10 · NCERT-aligned</div>
+  <div class="links">
+    <b>Live:</b> <a href="https://zarban.zarbanlabs-app.workers.dev">zarban.zarbanlabs-app.workers.dev</a>
+  </div>
+</div>
+
+<section>
+  <h2 class="accent">What it is</h2>
+  <div class="rule"></div>
+  <p class="lead">Zarban is a complete platform that assesses a student's math ability, <b>diagnoses the reason behind every mistake</b>, and turns that into targeted practice — with a full console for teachers and administrators to monitor and manage everything.</p>
+</section>
+
+<section>
+  <h2 class="accent">The problem it solves</h2>
+  <div class="rule"></div>
+  <p>Ordinary online tests give a <b>score</b>. A score says a student is weak; it never says <i>why</i> or <i>what to do next</i>. A 60% could be a calculation slip, a reading-comprehension gap, or a missing skill from two grades below — and each needs a completely different fix.</p>
+  <p>Zarban finds the <b>cause</b>. It adapts to each student as they answer, and produces a report that reads like a tutor's assessment: “strong at the maths, but word problems are slowing them down — that's a reading gap, not a maths gap.”</p>
+</section>
+
+<section>
+  <h2 class="accent">Who uses it</h2>
+  <div class="rule"></div>
+  <div class="grid3">
+    <div class="card"><h3>Students</h3><p>Take an adaptive test (no marks shown during it), get a clear diagnostic report, and practise the exact gaps.</p></div>
+    <div class="card"><h3>Teachers</h3><p>Monitor classrooms and cohorts, spot the skills blocking the most learners, and drill into any student.</p></div>
+    <div class="card"><h3>Administrators</h3><p>Manage the question bank, curriculum, staff, system health, and the entire database.</p></div>
+  </div>
+</section>
+
+<figure>
+  <img src="screenshots/home.png" alt="Landing page">
+  <figcaption>The student landing page — a class is chosen and the adaptive assessment begins.</figcaption>
+</figure>
+
+<div class="pagebreak"></div>
+
+<section>
+  <h2 class="accent">The student journey</h2>
+  <div class="rule"></div>
+  <p>The test <b>adapts in real time</b> — get answers right and it gets harder; struggle and it steps down toward the foundational skills that are actually the problem. When it ends, the student receives a diagnostic report.</p>
+  <figure>
+    <img src="screenshots/report.png" alt="Diagnostic report">
+    <figcaption>The diagnostic report: an estimated grade level, a plain-English root-cause diagnosis, flags for lucky guesses and rushed answers, a five-dimension learning profile, and a breakdown of error types.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2 class="accent">The teacher &amp; admin console</h2>
+  <div class="rule"></div>
+  <p>A single console gives staff a live picture of the whole school — headline numbers, the “hottest” skill gaps right now, average score by grade, and a class-level heatmap of where learners are failing.</p>
+  <figure>
+    <img src="screenshots/admin-dashboard.png" alt="Admin dashboard">
+    <figcaption>The admin command center — totals, top skill gaps, quick actions, and the skill-failure heatmap.</figcaption>
+  </figure>
+</section>
+
+<div class="pagebreak"></div>
+
+<section>
+  <h2 class="accent">The knowledge behind it</h2>
+  <div class="rule"></div>
+  <p>Every skill in the curriculum is mapped into a <b>knowledge graph</b> of prerequisites. That map is what lets the platform trace a Grade 10 mistake back to a missing Grade 9 skill and route the student there — the intelligence that makes the diagnosis meaningful.</p>
+  <figure>
+    <img src="screenshots/content-skills.png" alt="Skills knowledge graph">
+    <figcaption>The interactive skills knowledge graph — the prerequisite map the engine navigates.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2 class="accent">Full control of the data</h2>
+  <div class="rule"></div>
+  <p>Administrators can browse and manage <b>every table</b> in the live database directly — searchable, editable, and safe (every change is recorded).</p>
+  <figure>
+    <img src="screenshots/admin-database.png" alt="Database manager">
+    <figcaption>The database manager — every table, searchable and editable, from inside the console.</figcaption>
+  </figure>
+</section>
+
+<div class="pagebreak"></div>
+
+<section>
+  <h2 class="accent">Results &amp; value</h2>
+  <div class="rule"></div>
+  <ul>
+    <li><b>Comprehensive content:</b> 911 quality-checked questions across Grades 5–10, each mapped to a skill and its common misconceptions.</li>
+    <li><b>Genuinely adaptive:</b> five assessment techniques working together (item-response theory, knowledge tracing, misconception modelling, and a reading-vs-maths “twin” probe).</li>
+    <li><b>Fast and responsive:</b> the platform was performance-tuned end to end.</li>
+    <li><b>Zero hosting cost:</b> runs live on Cloudflare's free tier — a school can pilot it at no infrastructure cost.</li>
+    <li><b>Reliable:</b> 136 automated end-to-end checks guard every release.</li>
+  </ul>
+
+  <h3>Measured speed improvements</h3>
+  <table class="metrics">
+    <thead><tr><th>Interaction</th><th>Before</th><th>After</th><th>Faster by</th></tr></thead>
+    <tbody>
+      <tr><td>Answering a question</td><td>~480–610 ms</td><td>~280–340 ms</td><td class="good">~45%</td></tr>
+      <tr><td>Loading the dashboard</td><td>~311 ms</td><td>~170 ms</td><td class="good">~45%</td></tr>
+      <tr><td>Loading the content hub</td><td>~313 ms</td><td>~150 ms</td><td class="good">~52%</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2 class="accent">What's included in the handover</h2>
+  <div class="rule"></div>
+  <ul>
+    <li><b>Live application</b> — <a href="https://zarban.zarbanlabs-app.workers.dev">zarban.zarbanlabs-app.workers.dev</a>, deployed and running.</li>
+    <li><b>Full source code</b> — the complete repository, documented.</li>
+    <li><b>Interactive product tour</b> and a <b>technical deep-dive document</b> covering every workflow.</li>
+    <li><b>Admin access</b> — demo sign-in <b>admin@zarban.local / admin123</b> (change on first use, under User Access).</li>
+  </ul>
+  <div class="callout">
+    <b>In one line:</b> Zarban turns a raw test score into an actionable diagnosis and the exact next step — for the student, the teacher, and the administrator — and it's live today.
+  </div>
+</section>
+
+<div class="foot">
+  Zarban · Adaptive Math Assessment &amp; Learning Platform · zarban.zarbanlabs-app.workers.dev
+</div>
+
+</body>
+</html>
